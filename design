@@ -1,0 +1,11 @@
+Main object: a program to archive a file or a number of files
+Requirements:
+    pattern design
+    multi-platform
+    file modification on demand (encryption, compression, etc.)
+    the resulted archive is a singular file
+    file property persistence
+    random file access of the archive
+Implementation requirements:
+    the archive format may not follow existing archive format
+    the archive format outside the files' contents and their name must use ASCII compatible characters
