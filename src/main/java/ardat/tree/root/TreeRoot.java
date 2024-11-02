@@ -16,30 +16,26 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ardat.tree.writer;
+package ardat.tree.root;
 
 import ardat.tree.ArchiveEntity;
-import ardat.tree.root.TreeRoot;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.concurrent.LinkedBlockingQueue;
+public class TreeRoot {
 
-public abstract class AbstractTreeWriter {
+	private static final TreeRoot instance = new TreeRoot();
 
-	private final LinkedBlockingQueue<ArchiveEntity> queue = new LinkedBlockingQueue<>();
+	private ArchiveEntity rootEntity = null;
 
-	protected abstract void writeArchiveEntity(ArchiveEntity entity) throws IOException;
+	private TreeRoot() {}
 
-	public final void write() throws IOException {
-		ArchiveEntity root = TreeRoot.getTreeRoot().get();
-		assert root != null;
+	public static TreeRoot getTreeRoot() {
+		return instance;
+	}
+	public ArchiveEntity get() {
+		return rootEntity;
+	}
 
-		queue.add(root);
-		while (!queue.isEmpty()) {
-			ArchiveEntity currentEntity = queue.poll();
-			writeArchiveEntity(currentEntity);
-			queue.addAll(Arrays.stream(currentEntity.getChildren()).toList());
-		}
+	public void set(ArchiveEntity root) {
+		rootEntity = root;
 	}
 }

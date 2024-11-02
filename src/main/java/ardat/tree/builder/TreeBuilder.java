@@ -19,6 +19,7 @@
 package ardat.tree.builder;
 
 import ardat.tree.ArchiveEntity;
+import ardat.tree.root.TreeRoot;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -31,7 +32,7 @@ public abstract class TreeBuilder {
 
 	protected abstract ArchiveEntity[] getChildren(ArchiveEntity entity) throws IOException;
 
-	public ArchiveEntity build() throws IOException {
+	public TreeRoot build() throws IOException {
 		ArchiveEntity treeRoot = getRoot();
 		queue.add(treeRoot);
 		while (!queue.isEmpty()) {
@@ -40,7 +41,8 @@ public abstract class TreeBuilder {
 			queue.addAll(Arrays.stream(children).toList());
 			currentEntity.addChildren(children);
 		}
+		TreeRoot.getTreeRoot().set(treeRoot);
 
-		return treeRoot;
+		return TreeRoot.getTreeRoot();
 	}
 }
