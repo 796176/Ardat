@@ -60,7 +60,7 @@ public class FSTreeWriter extends AbstractTreeWriter{
 					Files.newByteChannel(entityPath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
 			) {
 				ByteBuffer byteBuffer = ByteBuffer.allocate(8 * 1024);
-				while (entity.getContent(byteBuffer) != -1) {
+				while (entity.getContent(byteBuffer) > 0) {
 					byteBuffer.flip();
 					wbc.write(byteBuffer);
 					byteBuffer.clear();
