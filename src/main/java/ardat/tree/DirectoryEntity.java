@@ -18,6 +18,7 @@
 
 package ardat.tree;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -82,5 +83,12 @@ public class DirectoryEntity extends ArchiveEntity {
 	@Override
 	public boolean isLeaf() {
 		return false;
+	}
+
+	@Override
+	public void close() throws IOException {
+		for(ArchiveEntity child: getChildren()) {
+			removeChild(child).close();
+		}
 	}
 }

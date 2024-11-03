@@ -18,10 +18,11 @@
 
 package ardat.tree;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public abstract class ArchiveEntity {
+public abstract class ArchiveEntity implements Closeable {
 
 	private ArchiveEntity parent;
 
@@ -51,5 +52,9 @@ public abstract class ArchiveEntity {
 
 	public boolean isLeaf() {
 		return true;
+	}
+
+	public boolean isOpened() {
+		return false;
 	}
 }

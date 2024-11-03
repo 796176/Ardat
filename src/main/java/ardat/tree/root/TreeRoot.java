@@ -20,6 +20,8 @@ package ardat.tree.root;
 
 import ardat.tree.ArchiveEntity;
 
+import java.io.IOException;
+
 public class TreeRoot {
 
 	private static final TreeRoot instance = new TreeRoot();
@@ -36,6 +38,9 @@ public class TreeRoot {
 	}
 
 	public void set(ArchiveEntity root) {
+		try {
+			if (rootEntity != null) rootEntity.close();
+		} catch (IOException ignored) { }
 		rootEntity = root;
 	}
 }

@@ -73,4 +73,14 @@ public class FileEntity extends ArchiveEntity{
 		name[name.length - 1] = localName;
 		return name;
 	}
+
+	@Override
+	public void close() throws IOException {
+		content.close();
+	}
+
+	@Override
+	public boolean isOpened() {
+		return content.isOpen();
+	}
 }
