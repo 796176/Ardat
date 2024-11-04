@@ -20,6 +20,7 @@ package io;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.NonWritableChannelException;
 import java.nio.channels.SeekableByteChannel;
 
@@ -35,7 +36,9 @@ public class SharedSeekableByteChannel implements SeekableByteChannel {
 
 	private long localPosition = 0;
 
-	public SharedSeekableByteChannel(
+	private boolean isOpened = true;
+
+	SharedSeekableByteChannel(
 		SeekableByteChannel seekableByteChannel,
 		long startingPos,
 		long size
@@ -51,12 +54,9 @@ public class SharedSeekableByteChannel implements SeekableByteChannel {
 		channelSize = channel.size();
 	}
 
-	public SharedSeekableByteChannel(SeekableByteChannel seekableByteChannel, long startingPos) throws IOException {
-		this(seekableByteChannel, startingPos, seekableByteChannel.size() - startingPos);
-	}
-
 	@Override
 	public int read(ByteBuffer byteBuffer) throws IOException {
+		if (!isOpened) throw new ClosedChannelException();
 		if (position() == size()) return -1;
 		byteBuffer.limit((int) Math.min(
 			byteBuffer.limit(),
@@ -95,11 +95,15 @@ public class SharedSeekableByteChannel implements SeekableByteChannel {
 
 	@Override
 	public boolean isOpen() {
-		return channel.isOpen();
+		return isOpened;
 	}
 
 	@Override
 	public void close() {
+		if (isOpened) {
+			SharedChannelFactory.getSharedChannelFactory().notifyClosing(this);
+			isOpened = false;
+		}
 	}
 
 	public long getStart() {
@@ -122,10 +126,7 @@ public class SharedSeekableByteChannel implements SeekableByteChannel {
 		setRange(offset, size);
 	}
 
-	public SharedSeekableByteChannel cloneChannel() throws IOException {
-		SharedSeekableByteChannel clonedSharedSeekableByteChannel =
-			new SharedSeekableByteChannel(channel, offset, size());
-		clonedSharedSeekableByteChannel.position(clonedSharedSeekableByteChannel.position());
-		return clonedSharedSeekableByteChannel;
+	SeekableByteChannel getUnderlyingChannel() {
+		return channel;
 	}
 }

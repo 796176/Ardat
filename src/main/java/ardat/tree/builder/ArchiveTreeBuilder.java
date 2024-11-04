@@ -20,6 +20,7 @@ package ardat.tree.builder;
 
 import ardat.tree.ArchiveEntity;
 import ardat.tree.ArchiveEntityFactory;
+import io.SharedChannelFactory;
 import io.SharedSeekableByteChannel;
 
 import java.io.IOException;
@@ -92,9 +93,13 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 		while (sbc.position() < sbc.size()) {
 			long fileSize = getFileSize(sbc);
 			int headerSize = getHeaderSize(sbc);
-			archivedEntities.add(new SharedSeekableByteChannel(sbc, sbc.position(), headerSize + fileSize));
+			archivedEntities.add(
+				SharedChannelFactory
+					.getSharedChannelFactory().newChannel(archPath, sbc.position(), headerSize + fileSize)
+			);
 			sbc.position(sbc.position() + headerSize + fileSize);
 		}
+		sbc.close();
 	}
 
 	private String getName(SeekableByteChannel sbc) throws IOException {

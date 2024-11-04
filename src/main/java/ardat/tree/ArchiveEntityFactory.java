@@ -18,6 +18,7 @@
 
 package ardat.tree;
 
+import io.SharedChannelFactory;
 import io.SharedSeekableByteChannel;
 
 import java.io.IOException;
@@ -42,7 +43,7 @@ public class ArchiveEntityFactory {
 			if (layer.entityName().equals(DirectoryEntity.class.getSimpleName())) {
 				entity = new DirectoryEntity(entityName(sbc), layer.pts());
 			} else if (layer.entityName().equals(FileEntity.class.getSimpleName())) {
-				SharedSeekableByteChannel content = sbc.cloneChannel();
+				SharedSeekableByteChannel content = SharedChannelFactory.getSharedChannelFactory().newChannel(sbc);
 				content.setRange(
 					content.size() - contentSize(content) + content.getStart(),
 					contentSize(content)
