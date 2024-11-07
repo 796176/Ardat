@@ -20,6 +20,7 @@ package ardat.tree.builder;
 
 import ardat.tree.ArchiveEntity;
 import ardat.tree.ArchiveEntityFactory;
+import ardat.tree.builder.archive.Headers;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -28,8 +29,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ArchiveTreeBuilder extends TreeBuilder {
 
@@ -89,10 +88,10 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 		SeekableByteChannel sbc = Files.newByteChannel(archPath, StandardOpenOption.READ);
 		sbc.position(getArchiveMetadataSize());
 		while (sbc.position() < sbc.size()) {
-			String header = retrieveHeader(sbc);
-			long fileSize = getFileSize(header);
+			String header = Headers.retrieve(sbc);
+			long fileSize = Headers.getFileSize(header);
 			ArchEntityInfo info = new ArchEntityInfo(sbc.position(), header);
-			Path p = Path.of(getName(header));
+			Path p = Path.of(Headers.getRelativePath(header));
 			cachedInfo.put(p, info);
 			hierarchy.addChild(p);
 			if (p.getNameCount() == 1) root = p;
@@ -100,42 +99,6 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 		}
 		sbc.close();
 	}
-
-	private String getName(String header) {
-		Matcher matcher = Pattern.compile("filepath [^\n]+").matcher(header);
-		matcher.find();
-		String filename = matcher.group();
-		return filename.substring(filename.indexOf(' ') + 1);
-	}
-
-	private long getFileSize(String header) {
-		Matcher matcher = Pattern.compile("size [\\da-f]{16}").matcher(header);
-		matcher.find();
-		String sizeString = matcher.group();
-		return Long.parseLong(sizeString.substring(sizeString.indexOf(' ') + 1), 16);
-	}
-
-	private String retrieveHeader(SeekableByteChannel sbc) throws IOException {
-		long pos = sbc.position();
-		int headerSize = getHeaderSize(sbc);
-		ByteBuffer buffer = ByteBuffer.allocate(headerSize);
-		sbc.read(buffer);
-		buffer.flip();
-		sbc.position(pos);
-		return new String(buffer.array());
-	}
-
-	private int getHeaderSize(SeekableByteChannel sbc) throws IOException {
-		long pos = sbc.position();
-		int headerSize = 0;
-		String headerLine;
-		while(!(headerLine = readLine(sbc)).isBlank()) {
-			headerSize += headerLine.length() + 1;
-		}
-		sbc.position(pos);
-		return ++headerSize;
-	}
-
 
 	private String readLine(SeekableByteChannel sbc) throws IOException {
 		StringBuilder line = new StringBuilder();

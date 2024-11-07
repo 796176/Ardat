@@ -19,6 +19,7 @@
 package ardat.tree;
 
 import ardat.tree.builder.ArchiveTreeBuilder;
+import ardat.tree.builder.archive.Headers;
 import io.SharedChannelFactory;
 import io.SharedSeekableByteChannel;
 
@@ -28,8 +29,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ArchiveEntityFactory {
 
@@ -43,16 +42,18 @@ public class ArchiveEntityFactory {
 			ArchiveEntity entity = null;
 			HeaderLayer[] layers = parseHeader(info.header());
 			for (HeaderLayer layer : layers) {
+				Path relativePath = Path.of(Headers.getRelativePath(info.header()));
+				String entityName = relativePath.getName(relativePath.getNameCount() - 1).toString();
 				if (layer.entityName().equals(DirectoryEntity.class.getSimpleName())) {
-					entity = new DirectoryEntity(entityName(info.header()), layer.pts());
+					entity = new DirectoryEntity(entityName, layer.pts());
 				} else if (layer.entityName().equals(FileEntity.class.getSimpleName())) {
-					long fileSize = contentSize(info.header());
+					long fileSize = Headers.getFileSize(info.header());
 					int headerLength = info.header().length();
 					SharedSeekableByteChannel content =
 						SharedChannelFactory
 							.getSharedChannelFactory()
 							.newChannel(arch, info.offset() + headerLength, fileSize);
-					entity = new FileEntity(entityName(info.header()), content, layer.pts());
+					entity = new FileEntity(entityName, content, layer.pts());
 				}
 			}
 
@@ -80,22 +81,5 @@ public class ArchiveEntityFactory {
 			}
 		}
 		return layers.toArray(new HeaderLayer[0]);
-	}
-
-	private static long contentSize(String header) throws IOException {
-		Matcher matcher = Pattern.compile("size [\\da-f]{16}").matcher(header);
-		matcher.find();
-		String sizeString = matcher.group();
-		return Long.parseLong(sizeString.substring(sizeString.indexOf(' ') + 1), 16);
-	}
-
-	private static String entityName(String header) throws IOException {
-		Matcher matcher = Pattern.compile("filepath [^\n]+").matcher(header);
-		matcher.find();
-		String fullName = matcher.group();
-		fullName = fullName.substring(fullName.indexOf(' ') + 1);
-		if (fullName.contains("/"))
-			return fullName.substring(fullName.lastIndexOf('/') + 1);
-		else return fullName;
 	}
 }
