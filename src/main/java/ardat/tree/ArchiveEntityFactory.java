@@ -18,12 +18,15 @@
 
 package ardat.tree;
 
+import ardat.tree.builder.ArchiveTreeBuilder;
 import io.SharedChannelFactory;
 import io.SharedSeekableByteChannel;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,28 +35,29 @@ public class ArchiveEntityFactory {
 
 	private record HeaderLayer(String entityName, ArchiveEntityProperty[] pts) {}
 
-	public static ArchiveEntity fromChannel(SharedSeekableByteChannel sbc) throws IOException {
-		assert sbc != null;
+	public static ArchiveEntity fromArchive(ArchiveTreeBuilder.ArchEntityInfo info, Path arch) throws IOException {
+		assert info != null && arch != null;
 
-		long pos = sbc.position();
-		sbc.position(0);
-		ArchiveEntity entity = null;
-		HeaderLayer[] layers = parseHeader(retrieveHeader(sbc));
-		for (HeaderLayer layer: layers) {
-			if (layer.entityName().equals(DirectoryEntity.class.getSimpleName())) {
-				entity = new DirectoryEntity(entityName(sbc), layer.pts());
-			} else if (layer.entityName().equals(FileEntity.class.getSimpleName())) {
-				SharedSeekableByteChannel content = SharedChannelFactory.getSharedChannelFactory().newChannel(sbc);
-				content.setRange(
-					content.size() - contentSize(content) + content.getStart(),
-					contentSize(content)
-				);
-				entity = new FileEntity(entityName(sbc), content, layer.pts());
+		try (SeekableByteChannel sbc = Files.newByteChannel(arch, StandardOpenOption.READ)) {
+			sbc.position(info.offset());
+			ArchiveEntity entity = null;
+			HeaderLayer[] layers = parseHeader(info.header());
+			for (HeaderLayer layer : layers) {
+				if (layer.entityName().equals(DirectoryEntity.class.getSimpleName())) {
+					entity = new DirectoryEntity(entityName(info.header()), layer.pts());
+				} else if (layer.entityName().equals(FileEntity.class.getSimpleName())) {
+					long fileSize = contentSize(info.header());
+					int headerLength = info.header().length();
+					SharedSeekableByteChannel content =
+						SharedChannelFactory
+							.getSharedChannelFactory()
+							.newChannel(arch, info.offset() + headerLength, fileSize);
+					entity = new FileEntity(entityName(info.header()), content, layer.pts());
+				}
 			}
-		}
 
-		sbc.position(pos);
-		return entity;
+			return entity;
+		}
 	}
 
 	private static HeaderLayer[] parseHeader(String header) {
@@ -78,16 +82,14 @@ public class ArchiveEntityFactory {
 		return layers.toArray(new HeaderLayer[0]);
 	}
 
-	private static long contentSize(SeekableByteChannel sbc) throws IOException {
-		String header = retrieveHeader(sbc);
+	private static long contentSize(String header) throws IOException {
 		Matcher matcher = Pattern.compile("size [\\da-f]{16}").matcher(header);
 		matcher.find();
 		String sizeString = matcher.group();
 		return Long.parseLong(sizeString.substring(sizeString.indexOf(' ') + 1), 16);
 	}
 
-	private static String entityName(SeekableByteChannel sbc) throws IOException {
-		String header = retrieveHeader(sbc);
+	private static String entityName(String header) throws IOException {
 		Matcher matcher = Pattern.compile("filepath [^\n]+").matcher(header);
 		matcher.find();
 		String fullName = matcher.group();
@@ -95,39 +97,5 @@ public class ArchiveEntityFactory {
 		if (fullName.contains("/"))
 			return fullName.substring(fullName.lastIndexOf('/') + 1);
 		else return fullName;
-	}
-
-	private static String retrieveHeader(SeekableByteChannel sbc) throws IOException {
-		long pos = sbc.position();
-		int headerSize = getHeaderSize(sbc);
-		ByteBuffer buffer = ByteBuffer.allocate(headerSize);
-		sbc.read(buffer);
-		buffer.flip();
-		sbc.position(pos);
-		return new String(buffer.array());
-	}
-
-	private static int getHeaderSize(SeekableByteChannel sbc) throws IOException {
-		long pos = sbc.position();
-		int headerSize = 0;
-		String headerLine;
-		while(!(headerLine = readLine(sbc)).isBlank()) {
-			headerSize += headerLine.length() + 1;
-		}
-		sbc.position(pos);
-		return ++headerSize;
-	}
-
-	private static String readLine(SeekableByteChannel sbc) throws IOException {
-		StringBuilder line = new StringBuilder();
-		while (sbc.position() < sbc.size()) {
-			ByteBuffer buffer = ByteBuffer.allocate(1);
-			int read = sbc.read(buffer);
-			buffer.flip();
-			if (read <= 0 || buffer.get(0) == '\n') return line.toString();
-			line.append(Character.toChars(buffer.get(0)));
-		}
-
-		return null;
 	}
 }

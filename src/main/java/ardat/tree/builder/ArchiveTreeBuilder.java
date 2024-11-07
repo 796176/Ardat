@@ -20,8 +20,6 @@ package ardat.tree.builder;
 
 import ardat.tree.ArchiveEntity;
 import ardat.tree.ArchiveEntityFactory;
-import io.SharedChannelFactory;
-import io.SharedSeekableByteChannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -29,16 +27,21 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ArchiveTreeBuilder extends TreeBuilder {
 
+	public record ArchEntityInfo(long offset, String header) {}
+
 	private final Path archPath;
 
-	private final LinkedList<SharedSeekableByteChannel> archivedEntities = new LinkedList<>();
+	private final FileHierarchy hierarchy = new FileHierarchy(1024);
+
+	private Path root;
+
+	private final HashMap<Path, ArchEntityInfo> cachedInfo = new HashMap<>();
 
 	private ArchiveTreeBuilder(Path archive) throws IOException {
 		assert archive != null;
@@ -56,24 +59,19 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 
 	@Override
 	protected ArchiveEntity getRoot() throws IOException {
-		return ArchiveEntityFactory.fromChannel(archivedEntities.getFirst());
+		ArchEntityInfo info = cachedInfo.get(root);
+		return ArchiveEntityFactory.fromArchive(info, archPath);
 	}
 
 	@Override
 	protected ArchiveEntity[] getChildren(ArchiveEntity entity) throws IOException {
 		String relativeName = String.join("/", entity.getName());
-		int index = 0;
-		while (!relativeName.equals(getName(archivedEntities.get(index))) && ++index < archivedEntities.size() - 1);
-		ArchiveEntity[] children = new ArchiveEntity[getChildrenCount(archivedEntities.get(index))];
-		if (children.length == 0) return new ArchiveEntity[0];
-
-		Iterator<SharedSeekableByteChannel> iterator = archivedEntities.iterator();
+		Path[] childrenPaths = hierarchy.getChildren(Path.of(relativeName));
+		ArchiveEntity[] children = new ArchiveEntity[childrenPaths.length];
 		int childrenIndex = 0;
-		while (iterator.hasNext()) {
-			SharedSeekableByteChannel sbc = iterator.next();
-			String childName = getName(sbc);
-			Matcher matcher = Pattern.compile("^" + relativeName + "/[^/]+$").matcher(childName);
-			if (matcher.find()) children[childrenIndex++] = ArchiveEntityFactory.fromChannel(sbc);
+		for (Path p: childrenPaths) {
+			ArchEntityInfo childInfo = cachedInfo.get(p);
+			children[childrenIndex++] = ArchiveEntityFactory.fromArchive(childInfo, archPath);
 		}
 
 		return children;
@@ -91,35 +89,26 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 		SeekableByteChannel sbc = Files.newByteChannel(archPath, StandardOpenOption.READ);
 		sbc.position(getArchiveMetadataSize());
 		while (sbc.position() < sbc.size()) {
-			long fileSize = getFileSize(sbc);
-			int headerSize = getHeaderSize(sbc);
-			archivedEntities.add(
-				SharedChannelFactory
-					.getSharedChannelFactory().newChannel(archPath, sbc.position(), headerSize + fileSize)
-			);
-			sbc.position(sbc.position() + headerSize + fileSize);
+			String header = retrieveHeader(sbc);
+			long fileSize = getFileSize(header);
+			ArchEntityInfo info = new ArchEntityInfo(sbc.position(), header);
+			Path p = Path.of(getName(header));
+			cachedInfo.put(p, info);
+			hierarchy.addChild(p);
+			if (p.getNameCount() == 1) root = p;
+			sbc.position(sbc.position() + header.length() + fileSize);
 		}
 		sbc.close();
 	}
 
-	private String getName(SeekableByteChannel sbc) throws IOException {
-		String header = retrieveHeader(sbc);
+	private String getName(String header) {
 		Matcher matcher = Pattern.compile("filepath [^\n]+").matcher(header);
 		matcher.find();
 		String filename = matcher.group();
 		return filename.substring(filename.indexOf(' ') + 1);
 	}
 
-	private int getChildrenCount(SeekableByteChannel sbc) throws IOException {
-		String header = retrieveHeader(sbc);
-		Matcher matcher = Pattern.compile("children \\d+").matcher(header);
-		matcher.find();
-		String childrenString = matcher.group();
-		return Integer.parseInt(childrenString.substring(childrenString.indexOf(' ') + 1));
-	}
-
-	private long getFileSize(SeekableByteChannel sbc) throws IOException{
-		String header = retrieveHeader(sbc);
+	private long getFileSize(String header) {
 		Matcher matcher = Pattern.compile("size [\\da-f]{16}").matcher(header);
 		matcher.find();
 		String sizeString = matcher.group();
