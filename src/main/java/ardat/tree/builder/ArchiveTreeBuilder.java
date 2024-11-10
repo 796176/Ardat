@@ -21,6 +21,7 @@ package ardat.tree.builder;
 import ardat.tree.ArchiveEntity;
 import ardat.tree.ArchiveEntityFactory;
 import ardat.tree.builder.archive.Headers;
+import ardat.format.Metadata;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -46,7 +47,7 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 		assert archive != null;
 
 		archPath = archive;
-		checkArchiveMetadata();
+		extractMetadataHeader();
 		cacheEntities();
 	}
 
@@ -76,11 +77,11 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 		return children;
 	}
 
-	private void checkArchiveMetadata() throws IOException {
+	private void extractMetadataHeader() throws IOException {
 		try (SeekableByteChannel sbc = Files.newByteChannel(archPath, StandardOpenOption.READ)) {
-			sbc.position(0);
-			String line = readLine(sbc);
-			if (!line.equals("ardat")) throw new IOException("The archive file is corrupted");
+			Metadata.MetadataBuilder builder = Metadata.getBuilder();
+			while (builder.feedPropertyLine(readLine(sbc)));
+			builder.build();
 		}
 	}
 
@@ -113,15 +114,7 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 		return null;
 	}
 
-	private long getArchiveMetadataSize() throws IOException {
-		try (SeekableByteChannel sbc = Files.newByteChannel(archPath, StandardOpenOption.READ)) {
-			long headerSize = readLine(sbc).length() + 1;
-			String linesAmount = readLine(sbc);
-			headerSize += linesAmount.length() + 1;
-			for (int i = 2; i < Integer.parseInt(linesAmount); i++) {
-				headerSize += readLine(sbc).length() + 1;
-			}
-			return headerSize;
-		}
+	private int getArchiveMetadataSize() {
+		return (Metadata.getMetadata().toString() + "\n").length();
 	}
 }

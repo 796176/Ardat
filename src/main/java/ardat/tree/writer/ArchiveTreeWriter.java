@@ -20,6 +20,7 @@ package ardat.tree.writer;
 
 import ardat.tree.ArchiveEntity;
 import ardat.tree.ArchiveEntityProperty;
+import ardat.format.Metadata;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -79,12 +80,10 @@ public class ArchiveTreeWriter extends AbstractTreeWriter {
 	}
 
 	private void writeArchiveMetadata() throws IOException {
-		String meta = """
-			ardat
-			4
-			version 0.1
-			origins %s
-			""".formatted(System.getProperty("os.name"));
+		Metadata.MetadataBuilder builder = Metadata.getBuilder();
+		builder.addProperty("version", "0.1");
+		builder.addProperty("origins", System.getProperty("os.name"));
+		String meta = builder.build().toString() + "\n";
 		try(ByteChannel bc = Files.newByteChannel(archPath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
 			ByteBuffer buffer = ByteBuffer.allocate(meta.length());
 			buffer.put(meta.getBytes());
