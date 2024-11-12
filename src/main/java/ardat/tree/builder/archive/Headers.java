@@ -28,6 +28,8 @@ import java.util.regex.Pattern;
 
 public class Headers {
 	public static String getRelativePath(String header) {
+		assert header != null;
+
 		Matcher matcher = Pattern.compile("filepath [^\n]+").matcher(header);
 		if (!matcher.find()) {
 			throw new ArchiveCorruptedException("File header corrupted: the filepath property is absent: " + header);
@@ -37,6 +39,8 @@ public class Headers {
 	}
 
 	public static long getFileSize(String header) {
+		assert header != null;
+
 		Matcher matcher = Pattern.compile("size [\\da-f]{16}").matcher(header);
 		if (!matcher.find()) {
 			throw new ArchiveCorruptedException("File header corrupted: the size property is absent: " + header);
@@ -46,6 +50,8 @@ public class Headers {
 	}
 
 	public static String retrieve(SeekableByteChannel sbc) throws IOException {
+		assert sbc != null;
+
 		try {
 			long pos = sbc.position();
 			int maxHeaderSize = 5 * 1024;
@@ -68,6 +74,8 @@ public class Headers {
 	}
 
 	public static String readLine(SeekableByteChannel sbc, int maxSize) throws IOException {
+		assert sbc != null && maxSize >= 0;
+
 		StringBuilder line = new StringBuilder();
 		while (sbc.position() < sbc.size()) {
 			ByteBuffer buffer = ByteBuffer.allocate(1);
