@@ -18,6 +18,8 @@
 
 package ardat.format;
 
+import ardat.exceptions.ArchiveCorruptedException;
+
 import java.util.LinkedList;
 
 public class Metadata {
@@ -92,14 +94,21 @@ public class Metadata {
 		}
 
 		private boolean processLine(String line, int lineCount) {
-			if (lineCount == 0 && line.equals(metadata.getSignature())) {
+			if (lineCount == 0) {
+				if (!line.equals(metadata.getSignature())) {
+					throw new ArchiveCorruptedException("The file signature doesn't match");
+				}
 				return true;
 			}
 			if (lineCount == 1) {
 				try {
 					metaHeaderLineAmount = Integer.parseInt(line);
 					return true;
-				} catch (NumberFormatException exception) {}
+				} catch (NumberFormatException exception) {
+					throw new ArchiveCorruptedException(
+						"Metadata corrupted: expected the length of the metadata header"
+					);
+				}
 			}
 
 			try {
@@ -107,8 +116,11 @@ public class Metadata {
 				String val = line.substring(line.indexOf(' ') + 1);
 				addProperty(key, val);
 				return  (!(lineCount + 1 == metaHeaderLineAmount));
-			} catch (IndexOutOfBoundsException exception) {}
-			return false;
+			} catch (IndexOutOfBoundsException exception) {
+				throw new ArchiveCorruptedException(
+					"Metadata corrupted: expected a key-value pair at line " + (lineCount + 1)
+				);
+			}
 		}
 	}
 }

@@ -18,6 +18,7 @@
 
 package ardat.tree.builder;
 
+import ardat.exceptions.ArchiveCorruptedException;
 import ardat.tree.ArchiveEntity;
 import ardat.tree.ArchiveEntityFactory;
 import ardat.tree.builder.archive.Headers;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
@@ -86,19 +88,24 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 	}
 
 	private void cacheEntities() throws IOException {
-		SeekableByteChannel sbc = Files.newByteChannel(archPath, StandardOpenOption.READ);
-		sbc.position(getArchiveMetadataSize());
-		while (sbc.position() < sbc.size()) {
-			String header = Headers.retrieve(sbc);
-			long fileSize = Headers.getFileSize(header);
-			ArchEntityInfo info = new ArchEntityInfo(sbc.position(), header);
-			Path p = Path.of(Headers.getRelativePath(header));
-			cachedInfo.put(p, info);
-			hierarchy.addChild(p);
-			if (p.getNameCount() == 1) root = p;
-			sbc.position(sbc.position() + header.length() + fileSize);
+		try(SeekableByteChannel sbc = Files.newByteChannel(archPath, StandardOpenOption.READ)) {
+			sbc.position(getArchiveMetadataSize());
+			while (sbc.position() < sbc.size()) {
+				String header = Headers.retrieve(sbc);
+				long fileSize = Headers.getFileSize(header);
+				ArchEntityInfo info = new ArchEntityInfo(sbc.position(), header);
+				Path p = Path.of(Headers.getRelativePath(header));
+				cachedInfo.put(p, info);
+				hierarchy.addChild(p);
+				if (p.getNameCount() == 1) root = p;
+				sbc.position(sbc.position() + header.length() + fileSize);
+			}
+		} catch (InvalidPathException exception) {
+			throw new ArchiveCorruptedException(
+				"File header corrupted: the path is unresolved: " + exception.getMessage(),
+				exception
+			);
 		}
-		sbc.close();
 	}
 
 	private String readLine(SeekableByteChannel sbc) throws IOException {

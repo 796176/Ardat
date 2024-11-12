@@ -18,6 +18,7 @@
 
 package ardat.tree;
 
+import ardat.exceptions.ArchiveCorruptedException;
 import ardat.tree.builder.ArchiveTreeBuilder;
 import ardat.tree.builder.archive.Headers;
 import io.SharedChannelFactory;
@@ -26,6 +27,7 @@ import io.SharedSeekableByteChannel;
 import java.io.IOException;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -57,29 +59,46 @@ public class ArchiveEntityFactory {
 				}
 			}
 
+			if (entity == null) {
+				throw new ArchiveCorruptedException(
+					"File header is corrupted: the archive entity name is absent: " + info.header()
+				);
+			}
 			return entity;
+		} catch (InvalidPathException exception) {
+			throw new ArchiveCorruptedException(
+				"File header corrupted: the path is unresolved: " + info.header(),
+				exception
+			);
 		}
 	}
 
 	private static HeaderLayer[] parseHeader(String header) {
-		header = header.trim();
-		int charsLeft = header.length();
-		LinkedBlockingDeque<HeaderLayer> layers = new LinkedBlockingDeque<>();
-		LinkedBlockingDeque<ArchiveEntityProperty> pts = new LinkedBlockingDeque<>();
-		while (charsLeft > 0) {
-			int nextLineSepIndex = header.lastIndexOf('\n', charsLeft - 1);
-			String headerLine = header.substring(nextLineSepIndex + 1, charsLeft);
-			charsLeft -= headerLine.length() + 1;
-			if (headerLine.startsWith("class ")) {
-				String className = headerLine.substring(headerLine.indexOf(' ') + 1);
-				layers.push(new HeaderLayer(className, pts.toArray(new ArchiveEntityProperty[0])));
-				pts = new LinkedBlockingDeque<>();
-			} else {
-				String key = headerLine.substring(0, headerLine.indexOf(' '));
-				String val = headerLine.substring(headerLine.indexOf(' ') + 1);
-				pts.push(new ArchiveEntityProperty(key, val));
+		try {
+			header = header.trim();
+			int charsLeft = header.length();
+			LinkedBlockingDeque<HeaderLayer> layers = new LinkedBlockingDeque<>();
+			LinkedBlockingDeque<ArchiveEntityProperty> pts = new LinkedBlockingDeque<>();
+			while (charsLeft > 0) {
+				int nextLineSepIndex = header.lastIndexOf('\n', charsLeft - 1);
+				String headerLine = header.substring(nextLineSepIndex + 1, charsLeft);
+				charsLeft -= headerLine.length() + 1;
+				if (headerLine.startsWith("class ")) {
+					String className = headerLine.substring(headerLine.indexOf(' ') + 1);
+					layers.push(new HeaderLayer(className, pts.toArray(new ArchiveEntityProperty[0])));
+					pts = new LinkedBlockingDeque<>();
+				} else {
+					String key = headerLine.substring(0, headerLine.indexOf(' '));
+					String val = headerLine.substring(headerLine.indexOf(' ') + 1);
+					pts.push(new ArchiveEntityProperty(key, val));
+				}
 			}
+			return layers.toArray(new HeaderLayer[0]);
+		} catch (IndexOutOfBoundsException exception) {
+			throw new ArchiveCorruptedException(
+				"File header corrupted: header structure is corrupted: " + header,
+				exception
+			);
 		}
-		return layers.toArray(new HeaderLayer[0]);
 	}
 }
