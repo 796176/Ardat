@@ -22,75 +22,78 @@ import ardat.tree.ArchiveEntity;
 import ardat.tree.ArchiveEntityProperty;
 import ardat.tree.DirectoryEntity;
 import ardat.tree.FileEntity;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class FSTreeBuilderTests extends TreeBuilderTests implements TreeBuilderTestIterator{
-
-	static Path workingDir;
+public class FSTreeBuilderTests extends TreeBuilderTests implements TreeBuilderTestIterator {
 	static FSTreeBuilder[] builders;
 	static ArchiveEntity[] results;
 	static int currentIndex = 0;
 
 	@BeforeAll
 	static void beforeAll() throws IOException {
-		workingDir = Files.createTempDirectory(null);
 		builders = new FSTreeBuilder[3];
 		results = new ArchiveEntity[3];
 
-		Path singleFile = Path.of(workingDir.toString(), "file1");
+		String preGeneratedDirs =
+			Path.of(System.getProperty("user.dir"), "src/test/resources/test_directories").toString();
+		Path singleFile = Path.of(preGeneratedDirs, "file1");
 		builders[currentIndex] = new FSTreeBuilder(singleFile);
-		results[currentIndex] = touch(singleFile, "content".getBytes());
+		BasicFileAttributes singleFileA =
+			Files.getFileAttributeView(singleFile, BasicFileAttributeView.class).readAttributes();
+		results[currentIndex] = touch("file1", "kingdom".getBytes(), singleFileA);
 		currentIndex++;
 
-		Path singleDir = Path.of(workingDir.toString(), "dir1");
+		Path singleDir = Path.of(preGeneratedDirs, "dir1");
 		builders[currentIndex] = new FSTreeBuilder(singleDir);
-		results[currentIndex] = mkdir(singleDir);
+		BasicFileAttributes singleDirA =
+			Files.getFileAttributeView(singleDir, BasicFileAttributeView.class).readAttributes();
+		results[currentIndex] = mkdir("dir1", singleDirA);
 		currentIndex++;
 
-		Path complexTree = Path.of(workingDir.toString(), "tree1");
+		Path complexTree = Path.of(preGeneratedDirs, "tree1");
 		builders[currentIndex] = new FSTreeBuilder(complexTree);
-		results[currentIndex] = mkdir(complexTree);
-		DirectoryEntity subDir = mkdir(Path.of(complexTree.toString(), "subDir"));
-		FileEntity subFile = touch(Path.of(complexTree.toString(), "subFile"), "liberty".getBytes());
+		BasicFileAttributes complexTreeA =
+			Files.getFileAttributeView(complexTree, BasicFileAttributeView.class).readAttributes();
+		results[currentIndex] = mkdir("tree1", complexTreeA);
+		BasicFileAttributes subDirA =
+			Files
+				.getFileAttributeView(Path.of(complexTree.toString(), "subDir"), BasicFileAttributeView.class)
+				.readAttributes();
+		DirectoryEntity subDir = mkdir("subDir", subDirA);
+		BasicFileAttributes subFileA =
+			Files
+				.getFileAttributeView(Path.of(complexTree.toString(), "subFile"), BasicFileAttributeView.class)
+				.readAttributes();
+		FileEntity subFile = touch("subFile", "federacy".getBytes(), subFileA);
 		results[currentIndex].addChildren(subDir, subFile);
 
 		currentIndex = 0;
 	}
 
 
-	private static DirectoryEntity mkdir(Path p) throws IOException {
-		Path dirPath = Files.createDirectory(p);
-		BasicFileAttributes dirA = Files.getFileAttributeView(dirPath, BasicFileAttributeView.class).readAttributes();
+	private static DirectoryEntity mkdir(String name, BasicFileAttributes attrs) {
 		return new DirectoryEntity(
-			p.getName(p.getNameCount() - 1).toString(),
+			name,
 			new ArchiveEntityProperty[]{
-				new ArchiveEntityProperty("create-time", "" + dirA.creationTime().toMillis()),
-				new ArchiveEntityProperty("modify-time", "" + dirA.lastModifiedTime().toMillis()),
-				new ArchiveEntityProperty("access-time", "" + dirA.lastAccessTime().toMillis())
+				new ArchiveEntityProperty("create-time", "" + attrs.creationTime().toMillis()),
+				new ArchiveEntityProperty("modify-time", "" + attrs.lastModifiedTime().toMillis()),
+				new ArchiveEntityProperty("access-time", "" + attrs.lastAccessTime().toMillis())
 			});
 	}
 
-	private static FileEntity touch(Path p, byte[] c) throws IOException {
-		Path filePath = Files.createFile(p);
-		try (ByteChannel bc = Files.newByteChannel(filePath, StandardOpenOption.WRITE)) {
-			bc.write(ByteBuffer.wrap(c));
-		}
-		BasicFileAttributes fileA = Files.getFileAttributeView(filePath, BasicFileAttributeView.class).readAttributes();
+	private static FileEntity touch(String name, byte[] c, BasicFileAttributes attrs) {
 		return new FileEntity(
-			p.getName(p.getNameCount() - 1).toString(),
-			Files.newByteChannel(filePath, StandardOpenOption.READ),
+			name,
+			new ArraySeekableByteChannel(c),
 			new ArchiveEntityProperty[]{
-				new ArchiveEntityProperty("create-time", "" + fileA.creationTime().toMillis()),
-				new ArchiveEntityProperty("modify-time", "" + fileA.lastModifiedTime().toMillis()),
-				new ArchiveEntityProperty("access-time", "" + fileA.lastAccessTime().toMillis())
+				new ArchiveEntityProperty("create-time", "" + attrs.creationTime().toMillis()),
+				new ArchiveEntityProperty("modify-time", "" + attrs.lastModifiedTime().toMillis()),
+				new ArchiveEntityProperty("access-time", "" + attrs.lastAccessTime().toMillis())
 			});
 	}
 
@@ -113,26 +116,5 @@ public class FSTreeBuilderTests extends TreeBuilderTests implements TreeBuilderT
 	@Override
 	public ArchiveEntity getExpectedResult() {
 		return results[currentIndex];
-	}
-
-	@AfterAll
-	static void afterAll() throws IOException {
-		Files.walkFileTree(workingDir, new SimpleFileVisitor<>() {
-			@Override
-			public FileVisitResult visitFile(Path path, BasicFileAttributes basicFileAttributes) throws IOException {
-				Files.delete(path);
-				return FileVisitResult.CONTINUE;
-			}
-
-			@Override
-			public FileVisitResult postVisitDirectory(Path path, IOException e) throws IOException {
-				Files.delete(path);
-				return FileVisitResult.CONTINUE;
-			}
-		});
-
-		for (ArchiveEntity ae: results) {
-			ae.close();
-		}
 	}
 }
