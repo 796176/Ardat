@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 
 public class FSTreeWriter extends AbstractTreeWriter{
@@ -52,6 +53,11 @@ public class FSTreeWriter extends AbstractTreeWriter{
 		assert entity != null;
 
 		Path entityPath = Path.of(dst.toString(), entity.getName());
+		Path entityPathParent = entityPath.getParent();
+		BasicFileAttributeView residentialDirAttributeView =
+			Files
+				.getFileAttributeView(entityPathParent, BasicFileAttributeView.class);
+		BasicFileAttributes residentialDirAttributes = residentialDirAttributeView.readAttributes();
 		if (!entity.isLeaf()) {
 			Files.createDirectory(entityPath);
 		} else {
@@ -77,6 +83,12 @@ public class FSTreeWriter extends AbstractTreeWriter{
 				FileTime.fromMillis(Long.parseLong(pts[find("create-time", pts)].val()))
 			);
 		} catch (ArrayIndexOutOfBoundsException ignored) { }
+
+		residentialDirAttributeView.setTimes(
+			residentialDirAttributes.lastModifiedTime(),
+			residentialDirAttributes.lastAccessTime(),
+			residentialDirAttributes.creationTime()
+		);
 	}
 
 	private int find(String key, ArchiveEntityProperty[] pts) {
