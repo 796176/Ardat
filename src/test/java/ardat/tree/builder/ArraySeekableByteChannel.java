@@ -27,7 +27,7 @@ public class ArraySeekableByteChannel implements SeekableByteChannel {
 
 	private long pos = 0;
 
-	ArraySeekableByteChannel(byte[] array) {
+	public ArraySeekableByteChannel(byte[] array) {
 		assert array != null;
 
 		arr = array;
