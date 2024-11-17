@@ -28,12 +28,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributeView;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class FSTreeWriter extends AbstractTreeWriter{
 
 	private final Path dst;
+
+	private final LinkedBlockingDeque<ArchiveEntity> branchEntities = new LinkedBlockingDeque<>();
+
+	private long entitiesLeft = 1;
 
 	private FSTreeWriter(Path destination) {
 		assert destination != null;
@@ -52,12 +56,8 @@ public class FSTreeWriter extends AbstractTreeWriter{
 	protected void writeArchiveEntity(ArchiveEntity entity) throws IOException {
 		assert entity != null;
 
+		entitiesLeft -= 1;
 		Path entityPath = Path.of(dst.toString(), entity.getName());
-		Path entityPathParent = entityPath.getParent();
-		BasicFileAttributeView residentialDirAttributeView =
-			Files
-				.getFileAttributeView(entityPathParent, BasicFileAttributeView.class);
-		BasicFileAttributes residentialDirAttributes = residentialDirAttributeView.readAttributes();
 		if (!entity.isLeaf()) {
 			Files.createDirectory(entityPath);
 		} else {
@@ -74,21 +74,24 @@ public class FSTreeWriter extends AbstractTreeWriter{
 			}
 		}
 
-		try {
-			ArchiveEntityProperty[] pts = entity.getProperties();
-			BasicFileAttributeView bfav = Files.getFileAttributeView(entityPath, BasicFileAttributeView.class);
-			bfav.setTimes(
-				FileTime.fromMillis(Long.parseLong(pts[find("modify-time", pts)].val())),
-				FileTime.fromMillis(Long.parseLong(pts[find("access-time", pts)].val())),
-				FileTime.fromMillis(Long.parseLong(pts[find("create-time", pts)].val()))
-			);
-		} catch (ArrayIndexOutOfBoundsException ignored) { }
-
-		residentialDirAttributeView.setTimes(
-			residentialDirAttributes.lastModifiedTime(),
-			residentialDirAttributes.lastAccessTime(),
-			residentialDirAttributes.creationTime()
-		);
+		if (entity.getChildren().length == 0) {
+			try {
+				ArchiveEntityProperty[] pts = entity.getProperties();
+				BasicFileAttributeView bfav = Files.getFileAttributeView(entityPath, BasicFileAttributeView.class);
+				bfav.setTimes(
+					FileTime.fromMillis(Long.parseLong(pts[find("modify-time", pts)].val())),
+					FileTime.fromMillis(Long.parseLong(pts[find("access-time", pts)].val())),
+					FileTime.fromMillis(Long.parseLong(pts[find("create-time", pts)].val()))
+				);
+				if (entitiesLeft == 0) {
+					processBranches();
+				}
+			} catch (ArrayIndexOutOfBoundsException ignored) {
+			}
+		} else {
+			branchEntities.push(entity);
+			entitiesLeft += entity.getChildren().length;
+		}
 	}
 
 	private int find(String key, ArchiveEntityProperty[] pts) {
@@ -96,5 +99,18 @@ public class FSTreeWriter extends AbstractTreeWriter{
 		while (!pts[index].key().equals(key) && ++index < pts.length);
 		if (index == pts.length) return -1;
 		return index;
+	}
+	
+	private void processBranches() throws IOException {
+		for (ArchiveEntity dir : branchEntities) {
+			Path dirPath = Path.of(dst.toString(), dir.getName());
+			ArchiveEntityProperty[] pts = dir.getProperties();
+			BasicFileAttributeView bfav = Files.getFileAttributeView(dirPath, BasicFileAttributeView.class);
+			bfav.setTimes(
+				FileTime.fromMillis(Long.parseLong(pts[find("modify-time", pts)].val())),
+				FileTime.fromMillis(Long.parseLong(pts[find("access-time", pts)].val())),
+				FileTime.fromMillis(Long.parseLong(pts[find("create-time", pts)].val()))
+			);
+		}
 	}
 }
