@@ -45,7 +45,7 @@ public class FSTreeBuilderTests extends TreeBuilderTests implements TreeBuilderT
 		builders[currentIndex] = new FSTreeBuilder(singleFile);
 		BasicFileAttributes singleFileA =
 			Files.getFileAttributeView(singleFile, BasicFileAttributeView.class).readAttributes();
-		results[currentIndex] = touch("file1", "kingdom".getBytes(), singleFileA);
+		results[currentIndex] = touch("file1", "qwerty".getBytes(), singleFileA);
 		currentIndex++;
 
 		Path singleDir = Path.of(preGeneratedDirs, "dir1");
@@ -69,7 +69,7 @@ public class FSTreeBuilderTests extends TreeBuilderTests implements TreeBuilderT
 			Files
 				.getFileAttributeView(Path.of(complexTree.toString(), "subFile"), BasicFileAttributeView.class)
 				.readAttributes();
-		FileEntity subFile = touch("subFile", "federacy".getBytes(), subFileA);
+		FileEntity subFile = touch("subFile", "extraterrestrial".getBytes(), subFileA);
 		results[currentIndex].addChildren(subDir, subFile);
 
 		currentIndex = 0;
