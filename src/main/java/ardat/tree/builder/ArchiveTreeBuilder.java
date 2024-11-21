@@ -23,9 +23,9 @@ import ardat.tree.ArchiveEntity;
 import ardat.tree.ArchiveEntityFactory;
 import ardat.tree.builder.archive.Headers;
 import ardat.format.Metadata;
+import io.Channels;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -82,7 +82,7 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 	private void extractMetadataHeader() throws IOException {
 		try (SeekableByteChannel sbc = Files.newByteChannel(archPath, StandardOpenOption.READ)) {
 			Metadata.MetadataBuilder builder = Metadata.getBuilder();
-			while (builder.feedPropertyLine(readLine(sbc)));
+			while (builder.feedPropertyLine(Channels.readLine(sbc)));
 			builder.build();
 		}
 	}
@@ -108,18 +108,6 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 		}
 	}
 
-	private String readLine(SeekableByteChannel sbc) throws IOException {
-		StringBuilder line = new StringBuilder();
-		while (sbc.position() < sbc.size()) {
-			ByteBuffer buffer = ByteBuffer.allocate(1);
-			int read = sbc.read(buffer);
-			buffer.flip();
-			if (read <= 0 || buffer.get(0) == '\n') return line.toString();
-			line.append(Character.toChars(buffer.get(0)));
-		}
-
-		return null;
-	}
 
 	private int getArchiveMetadataSize() {
 		return (Metadata.getMetadata().toString() + "\n").length();

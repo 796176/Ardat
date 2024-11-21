@@ -19,9 +19,9 @@
 package ardat.tree.builder.archive;
 
 import ardat.exceptions.ArchiveCorruptedException;
+import io.Channels;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,7 +58,7 @@ public class Headers {
 			int maxHeaderLineSize = 1024;
 			StringBuilder header = new StringBuilder(maxHeaderSize);
 			String headerLine;
-			while (!(headerLine = Headers.readLine(sbc, maxHeaderLineSize)).isBlank()) {
+			while (!(headerLine = Channels.readLine(sbc, maxHeaderLineSize)).isBlank()) {
 				header.append(headerLine).append('\n');
 				if (header.length() > maxHeaderSize) {
 					throw new ArchiveCorruptedException("The header exceeded the maximum length of " + maxHeaderSize);
@@ -71,20 +71,5 @@ public class Headers {
 				"End of file had been reached before attempting to read the header"
 			);
 		}
-	}
-
-	public static String readLine(SeekableByteChannel sbc, int maxSize) throws IOException {
-		assert sbc != null && maxSize >= 0;
-
-		StringBuilder line = new StringBuilder();
-		while (sbc.position() < sbc.size()) {
-			ByteBuffer buffer = ByteBuffer.allocate(1);
-			int read = sbc.read(buffer);
-			buffer.flip();
-			if (read <= 0 || buffer.get(0) == '\n' || maxSize == line.length()) return line.toString();
-			line.append(Character.toChars(buffer.get(0)));
-		}
-
-		return null;
 	}
 }
