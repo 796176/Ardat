@@ -23,6 +23,10 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.util.Arrays;
 
+/**
+ * FileEntity is a concrete implementation of {@link ArchiveEntity} that doesn't support children related operations.
+ * FileEntity is a Leaf participant of the Composite pattern.
+ */
 public class FileEntity extends ArchiveEntity{
 
 	private final String localName;
@@ -31,6 +35,13 @@ public class FileEntity extends ArchiveEntity{
 
 	private final ArchiveEntityProperty[] pts;
 
+	/**
+	 * Constructs a FileEntity object given the local name, the channel containing the file content and the
+	 * associated properties.
+	 * @param name the local name
+	 * @param channel the content of the file
+	 * @param properties the associated properties
+	 */
 	public FileEntity(String name, ByteChannel channel, ArchiveEntityProperty[] properties) {
 		assert name != null && channel != null && properties != null;
 
@@ -41,6 +52,9 @@ public class FileEntity extends ArchiveEntity{
 		System.arraycopy(properties, 0, pts, 1, properties.length);
 	}
 
+	/**
+	 * Attempts to add children throws {@link UnsupportedOperationException}.
+	 */
 	@Override
 	public ArchiveEntity[] addChildren(ArchiveEntity... entity) {
 		if (entity != null && entity.length > 0)
@@ -48,6 +62,9 @@ public class FileEntity extends ArchiveEntity{
 		return entity;
 	}
 
+	/**
+	 * Attempts to add children throws {@link UnsupportedOperationException}.
+	 */
 	@Override
 	public ArchiveEntity removeChild(ArchiveEntity entity) {
 		throw new UnsupportedOperationException();
@@ -74,6 +91,10 @@ public class FileEntity extends ArchiveEntity{
 		return name;
 	}
 
+	/**
+	 * Closes the channel associated with this entity.
+	 * @throws IOException If some I/O error occurs
+	 */
 	@Override
 	public void close() throws IOException {
 		content.close();

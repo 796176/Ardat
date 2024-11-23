@@ -25,12 +25,27 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.Charset;
 
+/**
+ * Channels is a class containing static methods related to channels.
+ */
 public class Channels {
 
+	/**
+	 * The invocation is analogous to Channels.readLine(ReadableByteChannel, Integer.MAX_VALUE).
+	 */
 	public static String readLine(ReadableByteChannel channel) throws IOException {
 		return readLine(channel, Integer.MAX_VALUE);
 	}
 
+	/**
+	 * Attempts to read a line from the given channel. The position of the channel is moved forward by the length of the
+	 * return line plus a line feeder. If the length of the line is equal to maxSize but didn't reach a line feeder,
+	 * the method moves the position of the channel by the length of this line.
+	 * @param channel the channel to read a line from
+	 * @param maxSize the maximum length of the line
+	 * @return the line or null if it's the end of the channel
+	 * @throws IOException If some I/O error occurs
+	 */
 	public static String readLine(ReadableByteChannel channel, int maxSize) throws IOException {
 		assert channel != null && maxSize > 0;
 
@@ -48,10 +63,21 @@ public class Channels {
 		return line;
 	}
 
+	/**
+	 * The invocation is analogues to Channel.readLine(SeekableByteChannel, Integer.MAX_VALUE).
+	 */
 	public static String readLine(SeekableByteChannel channel) throws IOException {
 		return 	readLine(channel, Integer.MAX_VALUE);
 	}
 
+	/**
+	 * The invocation is analogous to {@link Channels#readLine(ReadableByteChannel, int)}, with the exception that it
+	 * reads the data in a bulk potentially improving the performance.
+	 * @param channel the channel to read a line from
+	 * @param maxSize the maximum length of the line
+	 * @return the line or null if it's the end of the channel
+	 * @throws IOException If some I/O error occurs
+	 */
 	public static String readLine(SeekableByteChannel channel, int maxSize) throws IOException {
 		assert channel != null && maxSize > 0;
 

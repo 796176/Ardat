@@ -22,20 +22,43 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 
+/**
+ * FileHierarchy is a class to provide instantaneous access to the child entities of the parent entity. All entities are
+ * path objects. FileHierarchy uses a hash map to store the entities.<br><br>
+ *
+ * The access complexity is O(1).
+ * The amortized insert complexity is O(1). The worst case insert complexity is O(n).<br><br>
+ *
+ * For example for given paths: /a, /a/b, /a/b/c; parent /a has a child /a/b and parent /a/b has a child /a/b/c.<br>
+ * The time and result of adding those three paths will be the same as adding just /a/b/c because this will create
+ * /a and /a/b recursively because they are parent directories of /a/b/c.
+ */
 public class FileHierarchy {
 
 	private final HashMap<Path, Path[]> hierarchy;
 
+	/**
+	 * Constructs FileHierarchy with the initial capacity of {@link HashMap#HashMap()}.
+	 */
 	public FileHierarchy() {
 		hierarchy = new HashMap<>();
 	}
 
+	/**
+	 * Constructs FileHierarchy with the given capacity.
+	 * @param capacity the capacity of the underlying HashMap
+	 */
 	public FileHierarchy(int capacity) {
 		assert capacity >= 0;
 
 		hierarchy = new HashMap<>(capacity);
 	}
 
+	/**
+	 * Adds a new path entity. If the entity isn't a root and the parent entities haven't been added yet, adds them
+	 * recursively. If the entity was already added does nothing.
+	 * @param child a new entity to add
+	 */
 	public void addChild(Path child) {
 		assert child != null;
 
@@ -53,7 +76,12 @@ public class FileHierarchy {
 		hierarchy.replace(child.getParent(), newChildren);
 		hierarchy.put(child, new Path[0]);
 	}
-	
+
+	/**
+	 * Returns the child entities of the given parent entity.
+	 * @param parent the parent entity
+	 * @return the child entities if the parent entity was added, otherwise returns null
+	 */
 	public Path[] getChildren(Path parent) {
 		assert parent != null;
 

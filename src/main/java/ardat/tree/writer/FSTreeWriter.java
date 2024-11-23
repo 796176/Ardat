@@ -31,6 +31,10 @@ import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.FileTime;
 import java.util.concurrent.LinkedBlockingDeque;
 
+/**
+ * FSTreeWriter is a concrete implementation of {@link AbstractTreeWriter} that performs the output operation on
+ * the given tree into the file system.
+ */
 public class FSTreeWriter extends AbstractTreeWriter{
 
 	private final Path dst;
@@ -45,6 +49,12 @@ public class FSTreeWriter extends AbstractTreeWriter{
 		dst = destination;
 	}
 
+	/**
+	 * Constructs a new instance of FSTreeWriter. Throws an IOException if the given destination is not a directory.
+	 * @param destination the destination of the resulted file or directory
+	 * @return an instance of FSTreeWriter
+	 * @throws IOException if destination is not a directory
+	 */
 	public static FSTreeWriter getFSTreeWriter(Path destination) throws IOException {
 		assert destination != null;
 		if (!Files.isDirectory(destination)) throw new IOException("The " + destination + " path is not a directory");

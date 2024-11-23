@@ -24,6 +24,14 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.NonWritableChannelException;
 import java.nio.channels.SeekableByteChannel;
 
+/**
+ * SharedSeekableByteChannel is a wrapper class of {@link SeekableByteChannel}, which allows it to reference to the
+ * same concrete implementation of {@link SeekableByteChannel} ( e.g. {@link java.nio.channels.FileChannel} ).<br><br>
+ *
+ * The instance of the class is accessible through the {@link SharedChannelFactory} global object. <br><br>
+ * Due to the ability to share the same channel, SharedSeekableByteChannel doesn't support writing operations, it also
+ * can't close the channel by itself delegating this operation to {@link SharedChannelFactory}.
+ */
 public class SharedSeekableByteChannel implements SeekableByteChannel {
 
 	private final SeekableByteChannel channel;
@@ -38,6 +46,13 @@ public class SharedSeekableByteChannel implements SeekableByteChannel {
 
 	private boolean isOpened = true;
 
+	/**
+	 * Constructs the object given the channel and the available range of accessible data.
+	 * @param seekableByteChannel the channel to wrap
+	 * @param startingPos the index of the first available byte
+	 * @param size the size of the available window
+	 * @throws IOException if some I/O errors occur
+	 */
 	SharedSeekableByteChannel(
 		SeekableByteChannel seekableByteChannel,
 		long startingPos,
@@ -106,10 +121,19 @@ public class SharedSeekableByteChannel implements SeekableByteChannel {
 		}
 	}
 
+	/**
+	 * Returns the index of the first byte available to read.
+	 * @return the index of the first byte available to read
+	 */
 	public long getStart() {
 		return offset;
 	}
 
+	/**
+	 * Sets the available range of accessible data.
+	 * @param startingPos the index of the first available byte
+	 * @param size the size of the available window
+	 */
 	public void setRange(long startingPos, long size) {
 		assert startingPos >= 0 && size >= 0 && channelSize >= size + startingPos;
 
@@ -118,14 +142,25 @@ public class SharedSeekableByteChannel implements SeekableByteChannel {
 		if (position() > size()) position(size);
 	}
 
+	/**
+	 * The invocation is analogous to setRange(startingPos, size), where the size is contracted if necessary.
+	 */
 	public void setRange(long startingPos) {
 		setRange(startingPos, Math.min(size(), channelSize - startingPos));
 	}
 
+	/**
+	 * Sets a new size of the available window.
+	 * @param size the size of the available window
+	 */
 	public void setSize(long size) {
 		setRange(offset, size);
 	}
 
+	/**
+	 * Returns the wrapped channel.
+	 * @return the wrapped channel
+	 */
 	SeekableByteChannel getUnderlyingChannel() {
 		return channel;
 	}

@@ -25,13 +25,35 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * TreeBuilder is an abstract class intended to create entity trees from different sources.<br>
+ * {@link FSTreeBuilder} creates an entity tree using the file or the directory.<br>
+ * {@link ArchiveEntity} creates an entity tree using the archive file.
+ */
 public abstract class TreeBuilder {
 	private final LinkedBlockingQueue<ArchiveEntity> queue = new LinkedBlockingQueue<>();
 
+	/**
+	 * The concrete implementation constructs the root of the entity tree.
+	 * @return the root of the entity tree
+	 * @throws IOException if some I/O errors occur
+	 */
 	protected abstract ArchiveEntity getRoot() throws IOException;
 
+	/**
+	 * The concrete implementation constructs the children of the given entity.
+	 * @param entity the parent entity
+	 * @return an array of the children
+	 * @throws IOException if some I/O errors occur
+	 */
 	protected abstract ArchiveEntity[] getChildren(ArchiveEntity entity) throws IOException;
 
+	/**
+	 * Constructs a new entity tree wide-wise starting with the root. Puts the root tree reference to
+	 * the {@link TreeRoot} global object.
+	 * @return the {@link TreeRoot} global object
+	 * @throws IOException if some I/O errors occur
+	 */
 	public TreeRoot build() throws IOException {
 		ArchiveEntity treeRoot = getRoot();
 		queue.add(treeRoot);

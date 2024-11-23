@@ -33,10 +33,18 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Set;
 
+/**
+ * FSTreeBuilder is a concrete implementation of {@link TreeBuilder}, that constructs a new entity tree out of stored
+ * files and directories.
+ */
 public class FSTreeBuilder extends TreeBuilder{
 
 	private final Path rootPath;
 
+	/**
+	 * Constructs a new instance of FSTreeBuilder.
+	 * @param root the path to the file or directory
+	 */
 	public FSTreeBuilder(Path root) {
 		assert root != null;
 

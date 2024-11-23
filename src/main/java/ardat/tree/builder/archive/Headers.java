@@ -26,7 +26,16 @@ import java.nio.channels.SeekableByteChannel;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Headers is a class containing static methods related to header processing.
+ */
 public class Headers {
+
+	/**
+	 * Returns the path of the entity.
+	 * @param header the header
+	 * @return the path of the entity
+	 */
 	public static String getRelativePath(String header) {
 		assert header != null;
 
@@ -38,6 +47,11 @@ public class Headers {
 		return filename.substring(filename.indexOf(' ') + 1);
 	}
 
+	/**
+	 * Returns the size of the file descriptor associated with this header.
+	 * @param header the header
+	 * @return the size of the file descriptor
+	 */
 	public static long getFileSize(String header) {
 		assert header != null;
 
@@ -49,6 +63,12 @@ public class Headers {
 		return Long.parseLong(sizeString.substring(sizeString.indexOf(' ') + 1), 16);
 	}
 
+	/**
+	 * Returns the header starting from the current channel position and stops when reaches an empty line.
+	 * @param sbc the channel to retrieve the header from
+	 * @return the header
+	 * @throws IOException if some I/O errors occur
+	 */
 	public static String retrieve(SeekableByteChannel sbc) throws IOException {
 		assert sbc != null;
 

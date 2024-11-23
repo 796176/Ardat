@@ -22,6 +22,11 @@ import ardat.tree.ArchiveEntity;
 
 import java.io.IOException;
 
+/**
+ * TreeRoot is a global object to store the tree of the archive entity.<br><br>
+ * Every {@link ArchiveEntity} can have an open channel associated with it, so it's necessary to free the resources.
+ * This job is delegated to TreeRoot, which stores only one reference.
+ */
 public class TreeRoot {
 
 	private static final TreeRoot instance = new TreeRoot();
@@ -30,13 +35,26 @@ public class TreeRoot {
 
 	private TreeRoot() {}
 
+	/**
+	 * Returns the instance of TreeRoot.
+	 * @return the instance of TreeRoot
+	 */
 	public static TreeRoot getTreeRoot() {
 		return instance;
 	}
+
+	/**
+	 * Returns the root of the entity tree.
+	 * @return the root of the entity tree
+	 */
 	public ArchiveEntity get() {
 		return rootEntity;
 	}
 
+	/**
+	 * Sets a new root of the entity tree. Calls close() on the previous one.
+	 * @param root a new root of the entity tree
+	 */
 	public void set(ArchiveEntity root) {
 		try {
 			if (rootEntity != null) rootEntity.close();

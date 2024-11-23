@@ -30,6 +30,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
+/**
+ * ArchiveTreeWriter is a concrete implementation of {@link AbstractTreeWriter}, that performs the output operation on
+ * the given entity tree into an archive file.
+ */
 public class ArchiveTreeWriter extends AbstractTreeWriter {
 
 	private final Path archPath;
@@ -41,6 +45,12 @@ public class ArchiveTreeWriter extends AbstractTreeWriter {
 		writeArchiveMetadata();
 	}
 
+	/**
+	 * Constructs a new instance of ArchiveTreeWriter. Throws an IOException if the given path to a file already exists.
+	 * @param archive the path to a resulted archive
+	 * @return a new instance of ArchiveTreeWriter
+	 * @throws IOException if the file already exists
+	 */
 	public static ArchiveTreeWriter getArchiveTreeWriter(Path archive) throws IOException {
 		assert archive != null;
 		if (Files.exists(archive)) throw new IOException("The file " + archive + " already exists");

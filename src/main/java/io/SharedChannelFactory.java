@@ -25,6 +25,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 
+/**
+ * SharedChannelFactory is a global object intended to initiate and store the instances of
+ * {@link SharedSeekableByteChannel}.
+ */
 public final class SharedChannelFactory {
 
 	HashMap<Path, SeekableByteChannel> openedChannel = new HashMap<>(256);
@@ -35,10 +39,23 @@ public final class SharedChannelFactory {
 
 	private SharedChannelFactory() {}
 
+	/**
+	 * Returns the SharedChannelFactory object.
+	 * @return the SharedChannelFactory object
+	 */
 	public static SharedChannelFactory getSharedChannelFactory() {
 		return instance;
 	}
 
+	/**
+	 * Initiate a new instance of {@link SharedSeekableByteChannel} with {@link java.nio.channels.FileChannel} as an
+	 * underlying channel.
+	 * @param p the path to the file
+	 * @param startingPos the index of the first available byte
+	 * @param size the size of the available window
+	 * @return an instance of SharedSeekableByteChannel
+	 * @throws IOException if some I/O exceptions occur
+	 */
 	public SharedSeekableByteChannel newChannel(Path p, long startingPos, long size) throws IOException {
 		assert p != null && startingPos >= 0 && startingPos + size <= Files.size(p);
 
@@ -56,14 +73,29 @@ public final class SharedChannelFactory {
 		}
 	}
 
+	/**
+	 * The invocation is analogous to newChannel(p, startingPos, fileSize - staringPos).
+	 */
 	public SharedSeekableByteChannel newChannel(Path p, long startingPos) throws IOException {
 		return newChannel(p, startingPos, Files.size(p) - startingPos);
 	}
 
+	/**
+	 * The invocation is analogous to newChannel(p, 0, fileSize).
+	 */
 	public SharedSeekableByteChannel newChannel(Path p) throws IOException {
 		return newChannel(p, 0, Files.size(p));
 	}
 
+	/**
+	 * Initiate a new instance of {@link SharedSeekableByteChannel} with the same chanel as in the provided
+	 * {@link SharedSeekableByteChannel} instance.
+	 * @param channel the chanel to share the same underlying channel with
+	 * @param startingPos the index of the first available byte
+	 * @param size the size of the available window
+	 * @return an instance of SharedSeekableByteChannel
+	 * @throws IOException if some I/O exceptions occur
+	 */
 	public SharedSeekableByteChannel newChannel(
 		SharedSeekableByteChannel channel,
 		long startingPos,
@@ -76,6 +108,9 @@ public final class SharedChannelFactory {
 		return new SharedSeekableByteChannel(channel.getUnderlyingChannel(), startingPos, size);
 	}
 
+	/**
+	 * The invocation is analogous to newChannel(channel, startingPos, channel.size()).
+	 */
 	public SharedSeekableByteChannel newChannel(
 		SharedSeekableByteChannel channel,
 		long startingPos
@@ -83,10 +118,17 @@ public final class SharedChannelFactory {
 		return newChannel(channel, startingPos, channel.size());
 	}
 
+	/**
+	 * The invocation is analogous to newChannel(channel, channel.getStart, channel.size()).
+	 */
 	public SharedSeekableByteChannel newChannel(SharedSeekableByteChannel channel) throws IOException {
 		return newChannel(channel, channel.getStart(), channel.size());
 	}
 
+	/**
+	 * Invoked by an instance of {@link SharedSeekableByteChannel} to notify that close() was invoked on that channel.
+	 * @param channel the channel itself
+	 */
 	void notifyClosing(SharedSeekableByteChannel channel) {
 		assert channel != null;
 

@@ -22,6 +22,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * DirectoryEntity is a concrete implementation of {@link ArchiveEntity}, that supports children related methods.
+ * DirectoryEntity is a Composite participant of the Composite pattern.
+ */
 public class DirectoryEntity extends ArchiveEntity {
 
 	private final ArrayList<ArchiveEntity> children = new ArrayList<>();
@@ -30,6 +34,11 @@ public class DirectoryEntity extends ArchiveEntity {
 
 	private final ArchiveEntityProperty[] pts;
 
+	/**
+	 * Construct a DirectoryEntity object given the local name of the directory and associated properties
+	 * @param name the local name
+	 * @param properties the associated properties
+	 */
 	public DirectoryEntity(String name, ArchiveEntityProperty[] properties) {
 		assert name != null && properties != null;
 
@@ -85,6 +94,10 @@ public class DirectoryEntity extends ArchiveEntity {
 		return false;
 	}
 
+	/**
+	 * Invokes close method on every child
+	 * @throws IOException if some I/O error occurs
+	 */
 	@Override
 	public void close() throws IOException {
 		for(ArchiveEntity child: getChildren()) {

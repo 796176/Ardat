@@ -18,4 +18,9 @@
 
 package ardat.tree;
 
+/**
+ * ArchiveEntityProperty is a record to store an entity property.
+ * @param key the key of the property
+ * @param val the value of the property
+ */
 public record ArchiveEntityProperty (String key, String val){ }

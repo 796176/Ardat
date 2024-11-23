@@ -18,15 +18,31 @@
 
 package ardat.exceptions;
 
+/**
+ * Thrown when the archive file semantics doesn't match that of {@link ardat.tree.writer.ArchiveTreeWriter}.
+ */
 public class ArchiveCorruptedException extends RuntimeException {
+
+	/**
+	 * Constructs an ArchiveCorruptedException with the specified detail message.
+	 * @param message the specified message
+	 */
 	public ArchiveCorruptedException(String message) {
 		super(message);
 	}
 
+	/**
+	 * Constructs an ArchiveCorruptedException with no detail message.
+	 */
 	public ArchiveCorruptedException() {
 		super();
 	}
 
+	/**
+	 * Constructs an ArchiveCorruptedException with the specified detail message and cause.
+	 * @param message the specified message
+	 * @param cause the case
+	 */
 	public ArchiveCorruptedException(String message, Throwable cause) {
 		super(message, cause);
 	}
