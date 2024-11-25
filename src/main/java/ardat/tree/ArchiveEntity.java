@@ -87,6 +87,15 @@ public abstract class ArchiveEntity implements Closeable {
 	}
 
 	/**
+	 * Returns false if the underlying stream reached the end.
+	 * @return false if the underlying stream reached the end, otherwise true
+	 * @throws IOException if some I/O errors occur
+	 */
+	public boolean hasRemainingContent() throws IOException {
+		return false;
+	}
+
+	/**
 	 * Returns the unique name of the current entity in the tree organized in an array.
 	 * The array is composed of non-unique entity names represented as strings. The index represents the depth of each
 	 * entity where the 0th index is the root of the tree.
