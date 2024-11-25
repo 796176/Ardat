@@ -83,6 +83,11 @@ public class FileEntity extends ArchiveEntity{
 	}
 
 	@Override
+	public boolean hasRemainingContent() throws IOException {
+		return content.position() < content.size();
+	}
+
+	@Override
 	public String[] getName() {
 		String[] parentName = new String[0];
 		if (getParent() != null) parentName = getParent().getName();
