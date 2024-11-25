@@ -20,7 +20,7 @@ package ardat.tree;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.util.Arrays;
 
 /**
@@ -31,7 +31,7 @@ public class FileEntity extends ArchiveEntity{
 
 	private final String localName;
 
-	private final ByteChannel content;
+	private final SeekableByteChannel content;
 
 	private final ArchiveEntityProperty[] pts;
 
@@ -42,7 +42,7 @@ public class FileEntity extends ArchiveEntity{
 	 * @param channel the content of the file
 	 * @param properties the associated properties
 	 */
-	public FileEntity(String name, ByteChannel channel, ArchiveEntityProperty[] properties) {
+	public FileEntity(String name, SeekableByteChannel channel, ArchiveEntityProperty[] properties) {
 		assert name != null && channel != null && properties != null;
 
 		localName = name;
