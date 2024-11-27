@@ -32,9 +32,9 @@ public abstract class ArchiveEntityProcessor extends ArchiveEntityDecorator {
 
 	private final ByteBuffer processed = ByteBuffer.allocate(getPreferredProcessedWindowSize());
 
-	protected abstract int encode(ByteBuffer in, ByteBuffer out);
+	protected abstract int encode(ByteBuffer in, ByteBuffer out) throws IOException;
 
-	protected abstract int decode(ByteBuffer in, ByteBuffer out);
+	protected abstract int decode(ByteBuffer in, ByteBuffer out) throws IOException;
 
 	protected abstract int getPreferredUnprocessedWindowSize();
 
@@ -44,11 +44,15 @@ public abstract class ArchiveEntityProcessor extends ArchiveEntityDecorator {
 		this.encode = encode;
 	}
 
+	public boolean getEncoded() {
+		return encode;
+	}
+
 	protected ArchiveEntityProcessor() {
 		processed.flip();
 	}
 
-	private int process(ByteBuffer in, ByteBuffer out) {
+	private int process(ByteBuffer in, ByteBuffer out) throws IOException {
 		assert in != null && out != null;
 
 		if (encode) return encode(in, out);
