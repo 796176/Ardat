@@ -28,6 +28,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
+/**
+ * AESEntity is a concrete implementation of {@link ArchiveEntityProcessor}, that provides AES encryption and decryption
+ * of the data of the underlying entity. The specific algorithm of encryption and decryption is specified by
+ * {@link AESStrategy}.
+ */
 public class AESEntity extends ArchiveEntityProcessor {
 
 	private final int aesBlockSize = 16;
@@ -42,6 +47,13 @@ public class AESEntity extends ArchiveEntityProcessor {
 
 	private final ArchiveEntityProperty[] aesProperties;
 
+	/**
+	 * Constructs AESEntity using the provided archive entity and encryption algorithm.
+	 * @param archiveEntity an archive entity
+	 * @param pts the properties related to AESEntity
+	 * @param strategy the encryption algorithm
+	 * @param encode an operation mode
+	 */
 	public AESEntity(ArchiveEntity archiveEntity, ArchiveEntityProperty[] pts, AESStrategy strategy, boolean encode) {
 		assert archiveEntity != null && pts != null && strategy != null;
 
@@ -55,16 +67,30 @@ public class AESEntity extends ArchiveEntityProcessor {
 		} catch (NoSuchAlgorithmException ignored) {}
 	}
 
+	/**
+	 * Constructs AESEntity using the provided archive entity and encryption algorithm.
+	 * @param archiveEntity an archive entity
+	 * @param pts the properties related to AESEntity
+	 * @param strategy the encryption algorithm
+	 */
 	public AESEntity(ArchiveEntity archiveEntity, ArchiveEntityProperty[] pts, AESStrategy strategy) {
 		this(archiveEntity, pts, strategy, true);
 	}
 
+	/**
+	 * Sets a new encryption algorithm.
+	 * @param strategy a new encryption algorithm
+	 */
 	public void setStrategy(AESStrategy strategy) {
 		assert strategy != null;
 
 		strat = strategy;
 	}
 
+	/**
+	 * Returns the current encryption algorithm.
+	 * @return the current encryption algorithm
+	 */
 	public AESStrategy getStrategy() {
 		return strat;
 	}
@@ -112,6 +138,10 @@ public class AESEntity extends ArchiveEntityProcessor {
 		return getPreferredUnprocessedWindowSize() + silentHeaderLength;
 	}
 
+	/**
+	 * Returns properties of the underlying entity with the current properties attached to the end.
+	 * @return properties of the underlying entity with the current properties attached to the end
+	 */
 	@Override
 	public ArchiveEntityProperty[] getProperties() {
 		ArchiveEntityProperty[] parentPts = super.getProperties();
