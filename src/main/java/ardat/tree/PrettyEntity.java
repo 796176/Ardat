@@ -22,8 +22,17 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HexFormat;
 
+/**
+ * PrettyEntity is a concrete implementation of {@link ArchiveEntityProcessor}, that renders the data of the underlying
+ * entity as hexadecimal, meaning that every byte is encoded as 2 characters ranging from 00 to ff.
+ */
 public class PrettyEntity extends ArchiveEntityProcessor {
 
+	/**
+	 * Constructs PrettyEntity using the provided entity
+	 * @param archiveEntity an archive entity
+	 * @param encode an operation mode
+	 */
 	public PrettyEntity(ArchiveEntity archiveEntity, boolean encode) {
 		assert archiveEntity != null;
 
@@ -31,10 +40,18 @@ public class PrettyEntity extends ArchiveEntityProcessor {
 		setEncode(encode);
 	}
 
+	/**
+	 * Constructs PrettyEntity using the provided entity
+	 * @param archiveEntity an archive entity
+	 */
 	public PrettyEntity(ArchiveEntity archiveEntity) {
 		this(archiveEntity, true);
 	}
 
+	/**
+	 * Returns properties of the underlying entity with the current properties attached to the end.
+	 * @return properties of the underlying entity with the current properties attached to the end
+	 */
 	@Override
 	public ArchiveEntityProperty[] getProperties() {
 		ArchiveEntityProperty[] pts = Arrays.copyOf(super.getProperties(), super.getProperties().length + 1);
