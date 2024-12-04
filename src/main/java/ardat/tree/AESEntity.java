@@ -134,7 +134,7 @@ public class AESEntity extends ArchiveEntityProcessor {
 		potentialHeader.clear();
 		potentialHeader.put(0, encodedData, encodedData.capacity() - silentHeaderLength, silentHeaderLength);
 		ByteBuffer encryptedData = encodedData.limit(encodedData.limit() - silentHeaderLength);
-		out.put(strat.decrypt(encryptedData));
+		out.put(strat.decrypt(encryptedData).flip());
 		digest.update(out.array(), 0, out.position());
 
 		if (!getComponent().hasRemainingContent()) {
