@@ -24,8 +24,8 @@ import crypto.AESStrategy;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.security.Key;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 /**
@@ -48,33 +48,42 @@ public class AESEntity extends ArchiveEntityProcessor {
 	private final ArchiveEntityProperty[] aesProperties;
 
 	/**
-	 * Constructs AESEntity using the provided archive entity and encryption algorithm.
+	 * Constructs AESEntity using the provided archive entity and encryption algorithm. The encryption algorithm is
+	 * specified by {@link AESStrategy} and passed through the parameters alongside the parameters required by
+	 * a concrete implementation of the strategy.
 	 * @param archiveEntity an archive entity
 	 * @param pts the properties related to AESEntity
-	 * @param strategy the encryption algorithm
+	 * @param key the symmetric key
 	 * @param encode an operation mode
 	 */
-	public AESEntity(ArchiveEntity archiveEntity, ArchiveEntityProperty[] pts, AESStrategy strategy, boolean encode) {
-		assert archiveEntity != null && pts != null && strategy != null;
+	public AESEntity(ArchiveEntity archiveEntity, ArchiveEntityProperty[] pts, Key key, boolean encode) {
+		assert archiveEntity != null && pts != null && key != null;
 
 		aesProperties = pts;
 		potentialHeader.limit(0);
 		setComponent(archiveEntity);
 		setEncode(encode);
-		setStrategy(strategy);
 		try {
 			digest = MessageDigest.getInstance("SHA-256");
-		} catch (NoSuchAlgorithmException ignored) {}
+			strat = (AESStrategy) Class
+				.forName(ArchiveEntityProperty.findVal("strategy", pts))
+				.getConstructor(Key.class, ArchiveEntityProperty[].class)
+				.newInstance(key, pts);
+		} catch (Exception exception) {
+			throw new ArchiveCorruptedException("The AESStrategy construction failed", exception);
+		}
 	}
 
 	/**
-	 * Constructs AESEntity using the provided archive entity and encryption algorithm.
+	 * Constructs AESEntity using the provided archive entity and encryption algorithm. The encryption algorithm is
+	 * specified by {@link AESStrategy} and passed through the parameters alongside the parameters required by
+	 * a concrete implementation of the strategy.
 	 * @param archiveEntity an archive entity
+	 * @param key the symmetric key
 	 * @param pts the properties related to AESEntity
-	 * @param strategy the encryption algorithm
 	 */
-	public AESEntity(ArchiveEntity archiveEntity, ArchiveEntityProperty[] pts, AESStrategy strategy) {
-		this(archiveEntity, pts, strategy, true);
+	public AESEntity(ArchiveEntity archiveEntity, ArchiveEntityProperty[] pts, Key key) {
+		this(archiveEntity, pts, key, true);
 	}
 
 	/**
