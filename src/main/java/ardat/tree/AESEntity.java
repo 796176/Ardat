@@ -39,6 +39,8 @@ public class AESEntity extends ArchiveEntityProcessor {
 
 	private final int silentHeaderLength = aesBlockSize * 2;
 
+	private final int maxPaddingLength = aesBlockSize;
+
 	private final ByteBuffer potentialHeader = ByteBuffer.allocate(silentHeaderLength);
 
 	private AESStrategy strat;
@@ -106,9 +108,18 @@ public class AESEntity extends ArchiveEntityProcessor {
 
 	@Override
 	protected int encode(ByteBuffer in, ByteBuffer out) throws IOException {
-		out.put(strat.encrypt(in));
-		digest.update(in.array(), 0, in.limit());
-		if (!getComponent().hasRemainingContent()) {
+		if (getComponent().hasRemainingContent()) {
+			out.put(strat.encrypt(in).flip());
+			digest.update(in.array(), 0, in.limit());
+		} else {
+			int padLength = aesBlockSize - in.remaining() % aesBlockSize;
+			byte [] padding = new byte[padLength];
+			Arrays.fill(padding, (byte) padLength);
+			ByteBuffer paddedBuffer = ByteBuffer.allocate(in.remaining() + padLength);
+			paddedBuffer.put(in).put(padding).position(0);
+
+			out.put(strat.encrypt(paddedBuffer).flip());
+			digest.update(paddedBuffer.array());
 			out.put(digest.digest());
 		}
 		return out.position();
@@ -132,6 +143,8 @@ public class AESEntity extends ArchiveEntityProcessor {
 					"The content of the " + Path.of("", getName()) + " file is corrupt"
 				);
 			}
+			int padLength = out.get(out.position() - 1);
+			out.position(out.position() - padLength);
 		}
 
 		return out.position();
@@ -144,7 +157,7 @@ public class AESEntity extends ArchiveEntityProcessor {
 
 	@Override
 	protected int getPreferredProcessedWindowSize() {
-		return getPreferredUnprocessedWindowSize() + silentHeaderLength;
+		return getPreferredUnprocessedWindowSize() + maxPaddingLength + silentHeaderLength;
 	}
 
 	/**
