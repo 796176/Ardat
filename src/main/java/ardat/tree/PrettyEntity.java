@@ -82,7 +82,7 @@ public class PrettyEntity extends ArchiveEntityProcessor {
 		while (in.hasRemaining()) {
 			byte[] twoBytes = new byte[2];
 			in.get(twoBytes);
-			out.put(Byte.valueOf(new String(twoBytes), 16));
+			out.put(Integer.valueOf(new String(twoBytes), 16).byteValue());
 		}
 		return out.position() - oldOutPos;
 	}
