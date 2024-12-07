@@ -18,9 +18,26 @@
 
 package ardat.tree;
 
+import ardat.exceptions.ArchiveCorruptedException;
+
 /**
  * ArchiveEntityProperty is a record to store an entity property.
  * @param key the key of the property
  * @param val the value of the property
  */
-public record ArchiveEntityProperty (String key, String val){ }
+public record ArchiveEntityProperty (String key, String val){
+
+	/**
+	 * Searches for a value in the property array using a given key.
+	 * @param key the key
+	 * @param pts the property array
+	 * @return the value
+	 */
+	public static String findVal(String key, ArchiveEntityProperty[] pts) {
+		for (ArchiveEntityProperty pt: pts) {
+			if (pt.key().equals(key))
+				return pt.val();
+		}
+		throw new ArchiveCorruptedException("Property " + key + " isn't found");
+	}
+}
