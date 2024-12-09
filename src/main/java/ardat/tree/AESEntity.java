@@ -127,15 +127,23 @@ public class AESEntity extends ArchiveEntityProcessor {
 
 	@Override
 	protected int decode(ByteBuffer in, ByteBuffer out) throws IOException {
-		ByteBuffer encodedData = ByteBuffer.allocate(potentialHeader.remaining() + in.remaining());
-		encodedData.put(potentialHeader).put(in);
-		encodedData.flip();
+		try {
+			ByteBuffer encodedData = ByteBuffer.allocate(potentialHeader.remaining() + in.remaining());
+			encodedData.put(potentialHeader).put(in);
+			encodedData.flip();
+			potentialHeader.clear();
+			potentialHeader
+				.put(0, encodedData, encodedData.capacity() - silentHeaderLength, silentHeaderLength);
 
-		potentialHeader.clear();
-		potentialHeader.put(0, encodedData, encodedData.capacity() - silentHeaderLength, silentHeaderLength);
-		ByteBuffer encryptedData = encodedData.limit(encodedData.limit() - silentHeaderLength);
-		out.put(strat.decrypt(encryptedData).flip());
-		digest.update(out.array(), 0, out.position());
+			ByteBuffer encryptedData = encodedData.limit(encodedData.limit() - silentHeaderLength);
+			out.put(strat.decrypt(encryptedData).flip());
+			digest.update(out.array(), 0, out.position());
+		} catch (IndexOutOfBoundsException exception) {
+			throw new ArchiveCorruptedException(
+				"The content of the " + Path.of("", getName()) + " file corrupted: ",
+				exception
+			);
+		}
 
 		if (!getComponent().hasRemainingContent()) {
 			if (!Arrays.equals(potentialHeader.array(), digest.digest())) {
