@@ -153,7 +153,7 @@ public class AESEntity extends ArchiveEntityProcessor {
 		if (!getComponent().hasRemainingContent()) {
 			if (!Arrays.equals(potentialHeader.array(), digest.digest())) {
 				throw new ArchiveCorruptedException(
-					"The content of the " + Path.of("", getName()) + " file is corrupt"
+					"The content of the " + Path.of("", getName()) + " file corrupted: hash mismatch"
 				);
 			}
 			int padLength = out.get(out.position() - 1);
