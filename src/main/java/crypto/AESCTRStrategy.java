@@ -63,11 +63,6 @@ public final class AESCTRStrategy implements AESStrategy{
 		}
 	}
 
-	/**
-	 * Encrypted the padded data.
-	 * @param input the padded data
-	 * @return the encrypted data
-	 */
 	@Override
 	public ByteBuffer encrypt(ByteBuffer input) throws GeneralSecurityException {
 		Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
@@ -82,11 +77,6 @@ public final class AESCTRStrategy implements AESStrategy{
 		return output;
 	}
 
-	/**
-	 * Decrypt the encrypted data.
-	 * @param input the encrypted data
-	 * @return the decrypted data
-	 */
 	@Override
 	public ByteBuffer decrypt(ByteBuffer input) throws GeneralSecurityException {
 		return encrypt(input);
