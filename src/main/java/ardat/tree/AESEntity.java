@@ -24,6 +24,7 @@ import crypto.AESStrategy;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.MessageDigest;
 import java.util.Arrays;
@@ -108,21 +109,25 @@ public class AESEntity extends ArchiveEntityProcessor {
 
 	@Override
 	protected int encode(ByteBuffer in, ByteBuffer out) throws IOException {
-		if (getComponent().hasRemainingContent()) {
-			out.put(strat.encrypt(in).flip());
-			digest.update(in.array(), 0, in.limit());
-		} else {
-			int padLength = aesBlockSize - in.remaining() % aesBlockSize;
-			byte [] padding = new byte[padLength];
-			Arrays.fill(padding, (byte) padLength);
-			ByteBuffer paddedBuffer = ByteBuffer.allocate(in.remaining() + padLength);
-			paddedBuffer.put(in).put(padding).position(0);
+		try {
+			if (getComponent().hasRemainingContent()) {
+				out.put(strat.encrypt(in).flip());
+				digest.update(in.array(), 0, in.limit());
+			} else {
+				int padLength = aesBlockSize - in.remaining() % aesBlockSize;
+				byte[] padding = new byte[padLength];
+				Arrays.fill(padding, (byte) padLength);
+				ByteBuffer paddedBuffer = ByteBuffer.allocate(in.remaining() + padLength);
+				paddedBuffer.put(in).put(padding).position(0);
 
-			out.put(strat.encrypt(paddedBuffer).flip());
-			digest.update(paddedBuffer.array());
-			out.put(digest.digest());
+				out.put(strat.encrypt(paddedBuffer).flip());
+				digest.update(paddedBuffer.array());
+				out.put(digest.digest());
+			}
+			return out.position();
+		} catch (GeneralSecurityException exception) {
+			throw new ArchiveCorruptedException("Unexpected exception occurred: ", exception);
 		}
-		return out.position();
 	}
 
 	@Override
@@ -138,7 +143,7 @@ public class AESEntity extends ArchiveEntityProcessor {
 			ByteBuffer encryptedData = encodedData.limit(encodedData.limit() - silentHeaderLength);
 			out.put(strat.decrypt(encryptedData).flip());
 			digest.update(out.array(), 0, out.position());
-		} catch (IndexOutOfBoundsException exception) {
+		} catch (IndexOutOfBoundsException | GeneralSecurityException exception) {
 			throw new ArchiveCorruptedException(
 				"The content of the " + Path.of("", getName()) + " file corrupted: ",
 				exception

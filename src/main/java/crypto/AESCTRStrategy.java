@@ -21,14 +21,10 @@ package crypto;
 import ardat.exceptions.ArchiveCorruptedException;
 import ardat.tree.ArchiveEntityProperty;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import java.nio.ByteBuffer;
-import java.security.InvalidKeyException;
+import java.security.GeneralSecurityException;
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 
 /**
@@ -73,29 +69,17 @@ public final class AESCTRStrategy implements AESStrategy{
 	 * @return the encrypted data
 	 */
 	@Override
-	public ByteBuffer encrypt(ByteBuffer input) {
-		assert input.remaining() % blockSize == 0;
+	public ByteBuffer encrypt(ByteBuffer input) throws GeneralSecurityException {
+		Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
+		cipher.init(Cipher.ENCRYPT_MODE, key);
+		ByteBuffer output = ByteBuffer.allocate(input.remaining());
+		byte[] block = new byte[blockSize];
 
-		try {
-			Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
-			cipher.init(Cipher.ENCRYPT_MODE, key);
-			ByteBuffer output = ByteBuffer.allocate(input.remaining());
-			byte[] block = new byte[blockSize];
-
-			while (input.hasRemaining()) {
-				input.get(block);
-				output.put(xor(block, cipher.doFinal(computeCTR(iv, counter++))));
-			}
-			return output;
-		} catch (
-			NoSuchPaddingException |
-			IllegalBlockSizeException |
-			NoSuchAlgorithmException |
-			BadPaddingException |
-			InvalidKeyException ignored
-		) {
-			throw new RuntimeException("This exception shouldn't have been thrown, severe bug detected");
+		while (input.hasRemaining()) {
+			input.get(block);
+			output.put(xor(block, cipher.doFinal(computeCTR(iv, counter++))));
 		}
+		return output;
 	}
 
 	/**
@@ -104,7 +88,7 @@ public final class AESCTRStrategy implements AESStrategy{
 	 * @return the decrypted data
 	 */
 	@Override
-	public ByteBuffer decrypt(ByteBuffer input) {
+	public ByteBuffer decrypt(ByteBuffer input) throws GeneralSecurityException {
 		return encrypt(input);
 	}
 

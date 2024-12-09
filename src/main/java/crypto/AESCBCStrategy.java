@@ -23,9 +23,8 @@ import ardat.tree.ArchiveEntityProperty;
 
 import javax.crypto.*;
 import java.nio.ByteBuffer;
-import java.security.InvalidKeyException;
+import java.security.GeneralSecurityException;
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HexFormat;
 
@@ -68,31 +67,18 @@ public final class AESCBCStrategy implements AESStrategy {
 	 * @return the encrypted data
 	 */
 	@Override
-	public ByteBuffer encrypt(ByteBuffer input) {
-		assert input.remaining() % blockSize == 0;
+	public ByteBuffer encrypt(ByteBuffer input) throws GeneralSecurityException {
+		Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
+		cipher.init(Cipher.ENCRYPT_MODE, key);
+		ByteBuffer outputBuffer = ByteBuffer.allocate(input.remaining());
 
-		try {
-			Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
-			cipher.init(Cipher.ENCRYPT_MODE, key);
-			ByteBuffer outputBuffer = ByteBuffer.allocate(input.remaining());
-
-			byte[] block = new byte[blockSize];
-			while (input.hasRemaining()) {
-				input.get(block);
-				cipher.doFinal(xor(block, iv), 0, blockSize, iv, 0);
-				outputBuffer.put(iv);
-			}
-			return outputBuffer;
-		} catch (
-			NoSuchAlgorithmException |
-			NoSuchPaddingException |
-			BadPaddingException |
-			ShortBufferException |
-			IllegalBlockSizeException |
-			InvalidKeyException e
-		) {
-			throw new RuntimeException("This exception shouldn't have been thrown, severe bug detected");
+		byte[] block = new byte[blockSize];
+		while (input.hasRemaining()) {
+			input.get(block);
+			cipher.doFinal(xor(block, iv), 0, blockSize, iv, 0);
+			outputBuffer.put(iv);
 		}
+		return outputBuffer;
 	}
 
 	/**
@@ -101,30 +87,18 @@ public final class AESCBCStrategy implements AESStrategy {
 	 * @return the decrypted data
 	 */
 	@Override
-	public ByteBuffer decrypt(ByteBuffer input) {
-		assert input.remaining() % blockSize == 0;
+	public ByteBuffer decrypt(ByteBuffer input) throws GeneralSecurityException {
+		Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
+		cipher.init(Cipher.DECRYPT_MODE, key);
+		ByteBuffer outputBuffer = ByteBuffer.allocate(input.remaining());
 
-		try {
-			Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
-			cipher.init(Cipher.DECRYPT_MODE, key);
-			ByteBuffer outputBuffer = ByteBuffer.allocate(input.remaining());
-
-			byte[] block = new byte[blockSize];
-			while (input.hasRemaining()) {
-				input.get(block);
-				outputBuffer.put(xor(cipher.doFinal(block), iv));
-				iv = Arrays.copyOf(block, block.length);
-			}
-			return outputBuffer;
-		} catch (
-			NoSuchAlgorithmException |
-			NoSuchPaddingException |
-			BadPaddingException |
-			IllegalBlockSizeException |
-			InvalidKeyException ignored
-		) {
-			throw new RuntimeException("This exception shouldn't have been thrown, severe bug detected");
+		byte[] block = new byte[blockSize];
+		while (input.hasRemaining()) {
+			input.get(block);
+			outputBuffer.put(xor(cipher.doFinal(block), iv));
+			iv = Arrays.copyOf(block, block.length);
 		}
+		return outputBuffer;
 	}
 
 	private byte[] xor(byte[] a, byte[] b) {

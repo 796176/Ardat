@@ -19,10 +19,11 @@
 package crypto;
 
 import java.nio.ByteBuffer;
+import java.security.GeneralSecurityException;
 
 public interface AESStrategy {
 
-	ByteBuffer encrypt(ByteBuffer input);
+	ByteBuffer encrypt(ByteBuffer input) throws GeneralSecurityException;
 
-	ByteBuffer decrypt(ByteBuffer input);
+	ByteBuffer decrypt(ByteBuffer input) throws GeneralSecurityException;
 }
