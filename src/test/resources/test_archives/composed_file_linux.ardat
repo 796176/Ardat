@@ -1,0 +1,18 @@
+ardat
+4
+version 0.1
+origins Linux
+class FileEntity
+create-time 1
+modify-time 1
+access-time 1
+class AESEntity
+strategy crypto.AESCBCStrategy
+iv128 aeba7524752a5b6393247b144a73c4cf
+class PrettyEntity
+class none
+filepath composed_file
+children 0
+size 0000000000000060
+
+6dbb359b238c71781b53cbef28fddd70504c3608f8a479f9ef8f94160b0536f6a4c99359c314da5c116eec087c4f9e82
