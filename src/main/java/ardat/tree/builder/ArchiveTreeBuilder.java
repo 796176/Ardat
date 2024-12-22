@@ -20,7 +20,7 @@ package ardat.tree.builder;
 
 import ardat.exceptions.ArchiveCorruptedException;
 import ardat.tree.ArchiveEntity;
-import ardat.tree.ArchiveEntityFactory;
+import ardat.tree.builder.archive.ArchivedEntityConstructor;
 import ardat.tree.builder.archive.Headers;
 import ardat.format.Metadata;
 import io.Channels;
@@ -48,6 +48,8 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 
 	private final Path archPath;
 
+	private final ArchivedEntityConstructor constructor;
+
 	private final FileHierarchy hierarchy = new FileHierarchy(1024);
 
 	private Path root;
@@ -58,6 +60,7 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 		assert archive != null;
 
 		archPath = archive;
+		constructor = new ArchivedEntityConstructor(archPath);
 		extractMetadataHeader();
 		cacheEntities();
 	}
@@ -77,7 +80,7 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 	@Override
 	protected ArchiveEntity getRoot() throws IOException {
 		ArchEntityInfo info = cachedInfo.get(root);
-		return ArchiveEntityFactory.fromArchive(info, archPath);
+		return constructor.construct(info);
 	}
 
 	@Override
@@ -88,7 +91,7 @@ public class ArchiveTreeBuilder extends TreeBuilder {
 		int childrenIndex = 0;
 		for (Path p: childrenPaths) {
 			ArchEntityInfo childInfo = cachedInfo.get(p);
-			children[childrenIndex++] = ArchiveEntityFactory.fromArchive(childInfo, archPath);
+			children[childrenIndex++] = constructor.construct(childInfo);
 		}
 
 		return children;
