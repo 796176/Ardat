@@ -32,9 +32,10 @@ public class PrettyEntity extends ArchiveEntityProcessor {
 	 * Constructs PrettyEntity using the provided entity
 	 * @param archiveEntity an archive entity
 	 * @param encode an operation mode
+	 * @throws NullPointerException if archiveEntity is null
 	 */
 	public PrettyEntity(ArchiveEntity archiveEntity, boolean encode) {
-		assert archiveEntity != null;
+		if (archiveEntity == null) throw new NullPointerException();
 
 		setComponent(archiveEntity);
 		setEncode(encode);
@@ -43,6 +44,7 @@ public class PrettyEntity extends ArchiveEntityProcessor {
 	/**
 	 * Constructs PrettyEntity using the provided entity
 	 * @param archiveEntity an archive entity
+	 * @throws NullPointerException if archiveEntity is null
 	 */
 	public PrettyEntity(ArchiveEntity archiveEntity) {
 		this(archiveEntity, true);

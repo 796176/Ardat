@@ -58,9 +58,11 @@ public class AESEntity extends ArchiveEntityProcessor {
 	 * @param pts the properties related to AESEntity
 	 * @param key the symmetric key
 	 * @param encode an operation mode
+	 * @throws NullPointerException if archiveEntity is null
 	 */
 	public AESEntity(ArchiveEntity archiveEntity, ArchiveEntityProperty[] pts, Key key, boolean encode) {
-		assert archiveEntity != null && pts != null && key != null;
+		assert pts != null && key != null;
+		if (archiveEntity == null) throw new NullPointerException();
 
 		aesProperties = pts;
 		potentialHeader.limit(0);
@@ -84,6 +86,7 @@ public class AESEntity extends ArchiveEntityProcessor {
 	 * @param archiveEntity an archive entity
 	 * @param key the symmetric key
 	 * @param pts the properties related to AESEntity
+	 * @throws NullPointerException if archiveEntity is null
 	 */
 	public AESEntity(ArchiveEntity archiveEntity, ArchiveEntityProperty[] pts, Key key) {
 		this(archiveEntity, pts, key, true);
