@@ -26,7 +26,7 @@ import java.security.GeneralSecurityException;
  * concrete implementations to choose the specific block cipher mode e.g. CTR, CBC. The barebone implementation
  * ( without extending the public interface ) implies that the padding and de-padding is left to the client.
  */
-public interface AESStrategy {
+public sealed interface AESStrategy permits AESCBCStrategy, AESCTRStrategy {
 
 	/**
 	 * Encrypts the passed data.
