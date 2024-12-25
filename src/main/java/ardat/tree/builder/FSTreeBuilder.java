@@ -18,10 +18,7 @@
 
 package ardat.tree.builder;
 
-import ardat.tree.ArchiveEntity;
-import ardat.tree.ArchiveEntityProperty;
-import ardat.tree.DirectoryEntity;
-import ardat.tree.FileEntity;
+import ardat.tree.*;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -35,7 +32,8 @@ import java.util.Set;
 
 /**
  * FSTreeBuilder is a concrete implementation of {@link TreeBuilder}, that constructs a new entity tree out of stored
- * files and directories.
+ * files and directories. Every {@link ArchiveEntity} instantiated by this class is passed through
+ * getDecorator().construct() to add additional functionality to the entity.
  */
 public class FSTreeBuilder extends TreeBuilder{
 
@@ -52,7 +50,7 @@ public class FSTreeBuilder extends TreeBuilder{
 	}
 	@Override
 	protected ArchiveEntity getRoot() throws IOException {
-		return buildArchiveEntity(rootPath);
+		return getDecorator().construct(buildArchiveEntity(rootPath));
 	}
 
 	@Override
@@ -65,7 +63,7 @@ public class FSTreeBuilder extends TreeBuilder{
 		LinkedList<ArchiveEntity> children = new LinkedList<>();
 		Files.walkFileTree(concretePath, Set.of(), 1, new SimpleFileVisitor<>(){
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-				children.add(buildArchiveEntity(file));
+				children.add(getDecorator().construct(buildArchiveEntity(file)));
 				return FileVisitResult.CONTINUE;
 			}
 		});
