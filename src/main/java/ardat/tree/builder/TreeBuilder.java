@@ -19,6 +19,8 @@
 package ardat.tree.builder;
 
 import ardat.tree.ArchiveEntity;
+import ardat.tree.ArchiveEntityConstructorInterface;
+import ardat.tree.FileEntityDecorator;
 import ardat.tree.root.TreeRoot;
 
 import java.io.IOException;
@@ -32,6 +34,8 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public abstract class TreeBuilder {
 	private final LinkedBlockingQueue<ArchiveEntity> queue = new LinkedBlockingQueue<>();
+
+	private ArchiveEntityConstructorInterface<ArchiveEntity> decorator = new FileEntityDecorator();
 
 	/**
 	 * The concrete implementation constructs the root of the entity tree.
@@ -66,5 +70,25 @@ public abstract class TreeBuilder {
 		TreeRoot.getTreeRoot().set(treeRoot);
 
 		return TreeRoot.getTreeRoot();
+	}
+
+	/**
+	 * Returns an instance of {@link ArchiveEntityConstructorInterface<ArchiveEntity>} which can be used by a subclass
+	 * to add a decorator to the instance of {@link ArchiveEntity}.
+	 * @return an instance of {@link ArchiveEntityConstructorInterface<ArchiveEntity>}
+	 */
+	public ArchiveEntityConstructorInterface<ArchiveEntity> getDecorator() {
+		return decorator;
+	}
+
+	/**
+	 * Sets a new instance of {@link ArchiveEntityConstructorInterface<ArchiveEntity>}.
+	 * The default instance is {@link FileEntityDecorator} with an empty list.
+	 * @param decorator the decorator
+	 */
+	public void setDecorator(ArchiveEntityConstructorInterface<ArchiveEntity> decorator) {
+		assert decorator != null;
+
+		this.decorator = decorator;
 	}
 }
