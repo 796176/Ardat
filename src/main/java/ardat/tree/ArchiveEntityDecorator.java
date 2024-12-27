@@ -50,6 +50,22 @@ public abstract class ArchiveEntityDecorator extends ArchiveEntity {
 	 * Forwards the invocation to the component.
 	 */
 	@Override
+	protected void setParent(ArchiveEntity entity) {
+		getComponent().setParent(entity);
+	}
+
+	/**
+	 * Forwards the invocation to the component.
+	 */
+	@Override
+	protected ArchiveEntity getParent() {
+		return getComponent().getParent();
+	}
+
+	/**
+	 * Forwards the invocation to the component.
+	 */
+	@Override
 	public ArchiveEntity[] getChildren() {
 		return getComponent().getChildren();
 	}
