@@ -36,7 +36,7 @@ public abstract class ArchiveEntity implements Closeable {
 	 * Sets a new parent of the current entity.
 	 * @param entity a new parent
 	 */
-	protected final void setParent(ArchiveEntity entity) {
+	protected void setParent(ArchiveEntity entity) {
 		parent = entity;
 	}
 
@@ -44,7 +44,7 @@ public abstract class ArchiveEntity implements Closeable {
 	 * Returns the parent of the current entity.
 	 * @return the parent of the current entity or null if it doesn't have one
 	 */
-	protected final ArchiveEntity getParent() {
+	protected ArchiveEntity getParent() {
 		return parent;
 	}
 
