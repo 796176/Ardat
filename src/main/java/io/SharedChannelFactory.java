@@ -26,7 +26,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 
 /**
- * SharedChannelFactory is a global object intended to initiate and store the instances of
+ * SharedChannelFactory is a global object intended to initialize and store the instances of
  * {@link SharedSeekableByteChannel}.
  */
 public final class SharedChannelFactory {
@@ -48,7 +48,7 @@ public final class SharedChannelFactory {
 	}
 
 	/**
-	 * Initiate a new instance of {@link SharedSeekableByteChannel} with {@link java.nio.channels.FileChannel} as an
+	 * Initialize a new instance of {@link SharedSeekableByteChannel} with {@link java.nio.channels.FileChannel} as an
 	 * underlying channel.
 	 * @param p the path to the file
 	 * @param startingPos the index of the first available byte
@@ -88,7 +88,7 @@ public final class SharedChannelFactory {
 	}
 
 	/**
-	 * Initiate a new instance of {@link SharedSeekableByteChannel} with the same chanel as in the provided
+	 * Initialize a new instance of {@link SharedSeekableByteChannel} with the same chanel as in the provided
 	 * {@link SharedSeekableByteChannel} instance.
 	 * @param channel the chanel to share the same underlying channel with
 	 * @param startingPos the index of the first available byte

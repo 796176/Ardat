@@ -78,7 +78,7 @@ public class ArchivedEntityConstructor implements ArchiveEntityConstructorInterf
 				exception
 			);
 		} catch (IOException exception) {
-			throw new RuntimeException("Failed to created SharedSeekableByteChannel: ", exception);
+			throw new RuntimeException("Failed to initialize SharedSeekableByteChannel: ", exception);
 		}
 	}
 
