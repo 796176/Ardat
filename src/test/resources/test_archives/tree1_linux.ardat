@@ -1,0 +1,32 @@
+ardat
+4
+version 0.1
+origins Linux
+class DirectoryEntity
+create-time 1
+modify-time 1
+access-time 1
+class none
+filepath tree1
+children 2
+size 0000000000000000
+
+class DirectoryEntity
+create-time 1
+modify-time 1
+access-time 1
+class none
+filepath tree1/subDir
+children 0
+size 0000000000000000
+
+class FileEntity
+create-time 1
+modify-time 1
+access-time 1
+class none
+filepath tree1/subFile
+children 0
+size 0000000000000010
+
+extraterrestrial

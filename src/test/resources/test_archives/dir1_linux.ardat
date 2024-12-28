@@ -1,0 +1,13 @@
+ardat
+4
+version 0.1
+origins Linux
+class DirectoryEntity
+create-time 1
+modify-time 1
+access-time 1
+class none
+filepath dir1
+children 0
+size 0000000000000000
+
